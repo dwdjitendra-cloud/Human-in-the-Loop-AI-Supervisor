@@ -1,83 +1,142 @@
-# HIL-AI Supervisor Dashboard
+# HIL-AI (Human-in-the-Loop AI Supervisor Dashboard)
 
-Welcome! This guide will help you understand, set up, and use the HIL-AI Supervisor Dashboard—even if you have no coding experience.
-
----
-
-## What is HIL-AI?
-HIL-AI (Human-in-the-Loop AI) is a web dashboard that helps supervisors manage customer help requests. It combines AI automation with human decision-making, so you can review, resolve, and track requests easily.
+## Project Description
+HIL-AI is a full-stack MERN application that enables AI agents to handle customer queries automatically and escalate unresolved questions to a human supervisor. Supervisors can review, resolve, and update a knowledge base, allowing the AI to improve over time. This is a Human-in-the-Loop AI support system, combining automation with human decision-making for robust customer support.
 
 ---
 
-## Main Features
-- **Login for Supervisors:** Secure login for authorized users.
-- **View Requests:** See all customer help requests in one place.
-- **Resolve Requests:** Answer and resolve requests, with help from AI suggestions.
-- **Knowledge Base:** Save common questions and answers for future use.
-- **Easy Navigation:** Simple menus and pages for quick access.
-- **Success & Error Messages:** Clear notifications for every action.
+## Features
+- JWT-based supervisor authentication (register, login)
+- AI agent integration using OpenAI API for automated responses
+- Help request management (pending, resolved, unresolved)
+- Human-in-the-loop workflow for request escalation and resolution
+- Knowledge base management (add/update/search questions)
+- Pagination and indexed queries for performance
+- Error UI and toast notifications
+- Clean modular code structure
+- Optional LiveKit integration for real-time audio
+- Responsive React + Tailwind dashboard
 
 ---
 
-## How to Use (Step-by-Step)
-
-### 1. Open the Website
-- Go to the web address provided by your organization (e.g., `https://your-app.vercel.app`).
-
-### 2. Login
-- Enter your email and password.
-- Click "Login" to access the dashboard.
-
-### 3. View Requests
-- The main page shows a list of customer help requests.
-- You can switch between pending, resolved, and unresolved requests using the menu.
-
-### 4. Resolve a Request
-- Click on a request to view details.
-- Type your answer and click "Resolve".
-- You’ll see a green message when the request is resolved.
-
-### 5. Add to Knowledge Base
-- Save useful answers to the knowledge base for future reference.
-- Access the knowledge base from the menu.
-
-### 6. Logout
-- Click the logout button in the top menu to exit securely.
+## Tech Stack
+- **Frontend:** React.js (Vite), Tailwind CSS
+- **Backend:** Node.js, Express.js
+- **Database:** MongoDB Atlas
+- **Authentication:** JWT, bcrypt
+- **AI:** OpenAI API (text)
+- **Optional:** LiveKit for audio agent
 
 ---
 
-## How to Set Up (For Admins)
-
-### 1. Backend (Server)
-- The backend is hosted on Render (cloud service).
-- It stores all requests, answers, and supervisor accounts.
-- No setup needed for users—admins will provide the link.
-
-### 2. Frontend (Website)
-- The website is hosted on Vercel (cloud service).
-- Just visit the link in your browser—no installation required.
-
----
-
-## FAQ
-**Q: Do I need to install anything?**  
-A: No. Just use your web browser and the provided link.
-
-**Q: Is my data safe?**  
-A: Yes. Only authorized supervisors can log in. All data is stored securely.
-
-**Q: What if I forget my password?**  
-A: Contact your admin to reset your password.
-
-**Q: Can I use this on my phone?**  
-A: Yes! The dashboard works on computers, tablets, and smartphones.
+## Folder Structure
+```
+Human-in-the-Loop AI Supervisor/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── config/
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   └── index.css
+│   └── package.json
+```
 
 ---
 
-## Support
-If you have any questions or issues, contact your organization’s IT support or the dashboard administrator.
+## Environment Variables
+Set these in your `.env` files and deployment dashboards:
+- `MONGODB_URI` - MongoDB Atlas connection string
+- `JWT_SECRET` - JWT signing secret
+- `OPENAI_API_KEY` - OpenAI API key
+- `LIVEKIT_URL` (optional) - LiveKit server URL
+- `LIVEKIT_API_KEY` (optional) - LiveKit API key
+- `LIVEKIT_API_SECRET` (optional) - LiveKit API secret
 
 ---
 
-## About
-Created by Jitendra for easy, secure, and smart help request management.
+## Setup & Installation
+
+### 1. Clone the Repository
+```sh
+git clone https://github.com/your-username/Human-in-the-Loop-AI-Supervisor.git
+cd Human-in-the-Loop-AI-Supervisor
+```
+
+### 2. Backend Setup
+```sh
+cd backend
+npm install
+# Create a .env file and add required environment variables
+npm start
+```
+
+### 3. Frontend Setup
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+### 4. Deployment
+- **Backend:** Deploy on Render or Railway. Set environment variables in the dashboard.
+- **Frontend:** Deploy on Vercel. Set API base URL to your backend deployment.
+- **Database:** Use MongoDB Atlas for cloud database hosting.
+
+---
+
+## API Routes
+| Method | Endpoint                        | Description                       |
+|--------|----------------------------------|-----------------------------------|
+| POST   | /api/supervisors/register        | Register a new supervisor         |
+| POST   | /api/supervisors/login           | Login and get JWT                 |
+| GET    | /api/supervisors/:id             | Get supervisor details            |
+| GET    | /api/help-requests               | List all help requests (paginated)|
+| GET    | /api/help-requests/pending       | List pending requests (paginated) |
+| GET    | /api/help-requests/resolved      | List resolved requests (paginated)|
+| POST   | /api/help-requests/:id/resolve   | Resolve a help request            |
+| GET    | /api/knowledge-base              | List knowledge base entries       |
+| POST   | /api/knowledge-base              | Add knowledge base entry          |
+| PUT    | /api/knowledge-base/:id          | Update knowledge base entry       |
+| DELETE | /api/knowledge-base/:id          | Delete knowledge base entry       |
+
+---
+
+## Example Usage Flow
+1. **Supervisor registers and logs in.**
+2. **AI agent answers basic queries using the knowledge base.**
+3. **Unknown queries are escalated to supervisors.**
+4. **Supervisor reviews and resolves the request, updating the knowledge base.**
+5. **AI learns from the updated knowledge base for future queries.**
+
+---
+
+## Architecture / Screenshot
+*Add a diagram or screenshot here to showcase the dashboard and workflow.*
+
+---
+
+## License
+MIT
+
+---
+
+## Contribution
+Contributions are welcome! Please open issues or submit pull requests for improvements, bug fixes, or new features. Follow the existing code style and structure.
+
+---
+
+## Contact
+**Jitendra Kumar Dodwadiya**  
+Reliance Foundation Scholar | B.Tech CSE @ IIEST Shibpur  
+MERN Developer | ML Enthusiast  
+Email: jitendrakumar637587@gmail.com
+LinkedIn: [linkedin.com/in/jitendrakumar637587](https://linkedin.com/in/jitendrakumar637587)
