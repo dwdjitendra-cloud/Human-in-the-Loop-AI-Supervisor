@@ -13,6 +13,12 @@ export default function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Fix: define handleLoginSuccess before usage
+  const handleLoginSuccess = (name) => {
+    setSupervisorName(name);
+    setIsAuthenticated(true);
+  };
+
   if (!isAuthenticated) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
