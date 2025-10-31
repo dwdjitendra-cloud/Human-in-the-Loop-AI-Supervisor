@@ -7,6 +7,10 @@ import { KnowledgePage } from './pages/KnowledgeBase';
 import { TestAI } from './pages/TestAI';
 
 export default function App() {
+  // Define handleRequestResolved before usage
+  const handleRequestResolved = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [supervisorName, setSupervisorName] = useState('');
   const [currentPage, setCurrentPage] = useState('pending');
