@@ -50,7 +50,7 @@ export const PendingRequests = ({ onRequestResolved, setErrorMessage }) => {
       });
       fetchRequests();
       onRequestResolved?.();
-      setErrorMessage('Request resolved successfully!');
+  setErrorMessage({ type: 'success', text: 'Request resolved successfully!' });
     } catch (err) {
       setErrorMessage('Failed to resolve request');
     }

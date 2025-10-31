@@ -133,7 +133,6 @@ export const Login = ({ onLoginSuccess }) => {
 
         <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center mb-3">
-            Demo Credentials:
           </p>
           <div className="space-y-1 text-xs text-gray-600">
           </div>

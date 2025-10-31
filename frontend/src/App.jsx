@@ -13,31 +13,6 @@ export default function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    const token = localStorage.getItem('supervisorToken');
-    const name = localStorage.getItem('supervisorName');
-    if (token && name) {
-      setIsAuthenticated(true);
-      setSupervisorName(name);
-    }
-  }, []);
-
-  const handleLoginSuccess = (name) => {
-    setSupervisorName(name);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('supervisorToken');
-    localStorage.removeItem('supervisorName');
-    setIsAuthenticated(false);
-    setSupervisorName('');
-  };
-
-  const handleRequestResolved = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
-
   if (!isAuthenticated) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
@@ -63,6 +38,42 @@ export default function App() {
     }
   };
 
+  // Toast logic: support {type, text} for success, string for error
+  const getToast = () => {
+    if (!errorMessage) return null;
+    if (typeof errorMessage === 'string') {
+      return (
+        <div className="fixed top-6 right-6 z-50">
+          <div className="bg-red-600 text-white px-4 py-2 rounded shadow-lg flex items-center space-x-2">
+            <span>{errorMessage}</span>
+            <button
+              className="ml-2 text-white hover:text-gray-200"
+              onClick={() => setErrorMessage('')}
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      );
+    }
+    if (errorMessage.type === 'success') {
+      return (
+        <div className="fixed top-6 right-6 z-50">
+          <div className="bg-green-600 text-white px-4 py-2 rounded shadow-lg flex items-center space-x-2">
+            <span>{errorMessage.text}</span>
+            <button
+              className="ml-2 text-white hover:text-gray-200"
+              onClick={() => setErrorMessage('')}
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar
@@ -75,21 +86,8 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderPage()}
       </main>
-      {/* Error Toast */}
-      {errorMessage && (
-        <div className="fixed top-6 right-6 z-50">
-          <div className="bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-fade-in">
-            <span className="font-semibold">Error:</span>
-            <span>{errorMessage}</span>
-            <button
-              className="ml-4 text-white hover:text-gray-200 font-bold"
-              onClick={() => setErrorMessage('')}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Toast */}
+      {getToast()}
     </div>
   );
 }
