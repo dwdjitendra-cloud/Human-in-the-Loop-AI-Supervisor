@@ -1,125 +1,83 @@
-# Human-in-the-Loop AI Supervisor Dashboard
+# HIL-AI Supervisor Dashboard
 
-## Overview
-A robust, production-ready dashboard for managing AI-assisted help requests with human supervision. Built with strict code hygiene, modular architecture, advanced error handling, and performance optimization.
+Welcome! This guide will help you understand, set up, and use the HIL-AI Supervisor Dashboard—even if you have no coding experience.
 
-## Features
-- Supervisor authentication (JWT-based)
-- Help request management (pending, resolved, unresolved)
-- AI agent integration for automated responses
-- Human-in-the-loop workflow for request resolution
-- Knowledge base management
-- Pagination and performance-optimized queries
-- Error UI and toast notifications
-- MongoDB indexing for fast queries
-- Strict folder structure and clean code
+---
 
-## Technologies
-- **Frontend:** React.js, Vite, Tailwind CSS
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB Atlas
-- **Auth:** JWT
+## What is HIL-AI?
+HIL-AI (Human-in-the-Loop AI) is a web dashboard that helps supervisors manage customer help requests. It combines AI automation with human decision-making, so you can review, resolve, and track requests easily.
 
-## Folder Structure
-```
-Human-in-the-Loop AI Supervisor/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── utils/
-│   │   └── config/
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── index.css
-│   └── package.json
-├── README.md
-└── ...other config/docs
-```
+---
 
-## Setup Instructions
-### Prerequisites
-- Node.js (v18+ recommended)
-- MongoDB Atlas account
+## Main Features
+- **Login for Supervisors:** Secure login for authorized users.
+- **View Requests:** See all customer help requests in one place.
+- **Resolve Requests:** Answer and resolve requests, with help from AI suggestions.
+- **Knowledge Base:** Save common questions and answers for future use.
+- **Easy Navigation:** Simple menus and pages for quick access.
+- **Success & Error Messages:** Clear notifications for every action.
 
-### Backend Setup
-1. Navigate to `backend/`
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-3. Configure environment variables in `.env`:
-   - `MONGODB_URI`: Your MongoDB Atlas connection string
-   - `JWT_SECRET`: Secret for JWT tokens
-4. Start the backend server:
-   ```sh
-   npm start
-   ```
-   The backend runs on `http://localhost:5001`
+---
 
-### Frontend Setup
-1. Navigate to `frontend/`
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-3. Start the frontend dev server:
-   ```sh
-   npm run dev
-   ```
-   The frontend runs on `http://localhost:5173`
+## How to Use (Step-by-Step)
 
-## Usage
-- Register or log in as a supervisor
-- View, resolve, and manage help requests
-- Add answers to the knowledge base
-- Use pagination controls for large datasets
-- All actions are logged and validated
+### 1. Open the Website
+- Go to the web address provided by your organization (e.g., `https://your-app.vercel.app`).
 
-## API Endpoints
-### Supervisor
-- `POST /api/supervisors/register` — Register supervisor
-- `POST /api/supervisors/login` — Login and get JWT
-- `GET /api/supervisors/:id` — Get supervisor details
+### 2. Login
+- Enter your email and password.
+- Click "Login" to access the dashboard.
 
-### Help Requests
-- `GET /api/help-requests` — List all requests (paginated)
-- `GET /api/help-requests/pending` — List pending requests (paginated)
-- `GET /api/help-requests/resolved` — List resolved requests (paginated)
-- `POST /api/help-requests/:id/resolve` — Resolve a request
+### 3. View Requests
+- The main page shows a list of customer help requests.
+- You can switch between pending, resolved, and unresolved requests using the menu.
 
-### Knowledge Base
-- `GET /api/knowledge-base` — List entries (paginated)
-- `POST /api/knowledge-base` — Add entry
-- `PUT /api/knowledge-base/:id` — Update entry
+### 4. Resolve a Request
+- Click on a request to view details.
+- Type your answer and click "Resolve".
+- You’ll see a green message when the request is resolved.
 
-## Environment Variables
-- `MONGODB_URI`: MongoDB Atlas connection string
-- `JWT_SECRET`: JWT signing secret
+### 5. Add to Knowledge Base
+- Save useful answers to the knowledge base for future reference.
+- Access the knowledge base from the menu.
 
-## Security
-- Passwords are hashed with bcrypt
-- JWT tokens for authentication
-- Sensitive routes protected by middleware
+### 6. Logout
+- Click the logout button in the top menu to exit securely.
 
-## Performance
-- MongoDB indexes on frequently queried fields
-- Pagination for all list endpoints
-- Optimized queries and error handling
+---
 
-## Troubleshooting
-- Ensure MongoDB Atlas IP is whitelisted
-- Check `.env` for correct credentials
-- Use browser dev tools for API/network errors
+## How to Set Up (For Admins)
 
-## License
-MIT
+### 1. Backend (Server)
+- The backend is hosted on Render (cloud service).
+- It stores all requests, answers, and supervisor accounts.
+- No setup needed for users—admins will provide the link.
 
-## Author
-Jitendra
+### 2. Frontend (Website)
+- The website is hosted on Vercel (cloud service).
+- Just visit the link in your browser—no installation required.
+
+---
+
+## FAQ
+**Q: Do I need to install anything?**  
+A: No. Just use your web browser and the provided link.
+
+**Q: Is my data safe?**  
+A: Yes. Only authorized supervisors can log in. All data is stored securely.
+
+**Q: What if I forget my password?**  
+A: Contact your admin to reset your password.
+
+**Q: Can I use this on my phone?**  
+A: Yes! The dashboard works on computers, tablets, and smartphones.
+
+---
+
+## Support
+If you have any questions or issues, contact your organization’s IT support or the dashboard administrator.
+
+---
+
+## About
+Created by Jitendra for easy, secure, and smart help request management.

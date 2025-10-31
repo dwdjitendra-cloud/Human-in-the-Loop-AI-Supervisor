@@ -44,8 +44,8 @@ export const Login = ({ onLoginSuccess }) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
-            <span className="text-white font-extrabold text-2xl tracking-wide drop-shadow-lg" style={{fontFamily: 'Montserrat, sans-serif'}}>HIL-AI</span>
+          <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-md">
+            <span className="text-white font-bold text-xl tracking-wide" style={{fontFamily: 'sans-serif'}}>HIL-AI</span>
           </div>
         </div>
 
