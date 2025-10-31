@@ -119,11 +119,6 @@ npm run dev
 
 ---
 
-## Architecture / Screenshot
-*Add a diagram or screenshot here to showcase the dashboard and workflow.*
-
----
-
 ## License
 MIT
 
@@ -135,8 +130,8 @@ Contributions are welcome! Please open issues or submit pull requests for improv
 ---
 
 ## Contact
-**Jitendra Kumar Dodwadiya**  
-Reliance Foundation Scholar | B.Tech CSE @ IIEST Shibpur  
-MERN Developer | ML Enthusiast  
-Email: jitendrakumar637587@gmail.com
+**Jitendra Kumar Dodwadiya**
+
+Email: 
+jitendrakumar637587@gmail.com
 LinkedIn: [linkedin.com/in/jitendrakumar637587](https://linkedin.com/in/jitendrakumar637587)
