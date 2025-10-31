@@ -45,7 +45,7 @@ export const Login = ({ onLoginSuccess }) => {
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="flex justify-center mb-8">
           <div className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-xl tracking-wide" style={{fontFamily: 'sans-serif'}}>HIL-AI</span>
+            <span className="text-white font-bold text-xl tracking-wide" style={{fontFamily: 'sans-serif'}}>H-ai</span>
           </div>
         </div>
 
