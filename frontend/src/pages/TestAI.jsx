@@ -61,6 +61,16 @@ export const TestAI = ({ onNewRequest }) => {
             />
           </div>
 
+          <label className="flex items-center text-sm text-gray-700">
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={useLivekitSim}
+              onChange={(e) => setUseLivekitSim(e.target.checked)}
+            />
+            Use LiveKit Simulation endpoint
+          </label>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Question
@@ -149,12 +159,3 @@ export const TestAI = ({ onNewRequest }) => {
   );
 };
 
-                    <label className="flex items-center text-sm text-gray-700">
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        checked={useLivekitSim}
-                        onChange={(e) => setUseLivekitSim(e.target.checked)}
-                      />
-                      Use LiveKit Simulation endpoint
-                    </label>
