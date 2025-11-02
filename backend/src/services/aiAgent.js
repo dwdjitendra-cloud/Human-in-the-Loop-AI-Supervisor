@@ -85,7 +85,15 @@ export const aiAgent = {
   },
 
   getDefaultAnswer(question) {
+    // Conversational and service-related questions
+    if (lowerQuestion.includes('what services do you offer') || lowerQuestion.includes('services available') || lowerQuestion.includes('can you help me with') || lowerQuestion.includes('do you provide') || lowerQuestion.includes('what can you do')) {
+      return `We offer the following services: ${SALON_INFO.services.join(', ')}. If you have a specific need, just ask!`;
+    }
     const lowerQuestion = question.toLowerCase();
+
+    if (lowerQuestion.includes('how are you') || lowerQuestion.includes('how r u') || lowerQuestion.includes('how do you do')) {
+      return "I'm an AI assistant, here to help you! How can I assist you today?";
+    }
 
     if (lowerQuestion.includes('hour') || lowerQuestion.includes('open')) {
       return `${SALON_INFO.name} is open ${SALON_INFO.hours}`;
