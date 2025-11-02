@@ -1,31 +1,45 @@
 # HIL-AI (Human-in-the-Loop AI Supervisor Dashboard)
 
-## Project Description
-HIL-AI is a full-stack MERN application that enables AI agents to handle customer queries automatically and escalate unresolved questions to a human supervisor. Supervisors can review, resolve, and update a knowledge base, allowing the AI to improve over time. This is a Human-in-the-Loop AI support system, combining automation with human decision-making for robust customer support.
+## Project Overview
+HIL-AI is a full-stack MERN web dashboard for customer support that combines AI automation with human supervision. AI agents answer customer questions using a knowledge base. If the AI cannot answer, the query is escalated to a human supervisor, who reviews, resolves, and updates the knowledge base—making the AI smarter over time.
 
 ---
 
-## Features
-- JWT-based supervisor authentication (register, login)
-- AI agent integration using OpenAI API for automated responses
-- Help request management (pending, resolved, unresolved)
-- Human-in-the-loop workflow for request escalation and resolution
-- Knowledge base management (add/update/search questions)
-- Pagination and indexed queries for performance
-- Error UI and toast notifications
-- Clean modular code structure
-- Optional LiveKit integration for real-time audio
-- Responsive React + Tailwind dashboard
+## Demo Links
+- **Backend (Render):** https://human-in-the-loop-ai-supervisor-0umh.onrender.com
+- **Frontend (Vercel):** https://reception-ai-inky.vercel.app
+- **GitHub Repo:** https://github.com/dwdjitendra-cloud/Human-in-the-Loop-AI-Supervisor
+
+---
+
+## Architecture Diagram (Text Description)
+- User submits a question via the frontend (React + Vercel)
+- AI agent (OpenAI + knowledge base) tries to answer
+- If AI cannot answer, request is escalated to supervisor
+- Supervisor reviews and resolves the request, updating the knowledge base
+- AI uses updated knowledge base for future queries
+- All data is stored in MongoDB Atlas, accessed via Express.js backend (Render)
 
 ---
 
 ## Tech Stack
-- **Frontend:** React.js (Vite), Tailwind CSS
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB Atlas
-- **Authentication:** JWT, bcrypt
-- **AI:** OpenAI API (text)
-- **Optional:** LiveKit for audio agent
+- **Frontend:** React.js (Vite), Tailwind CSS, Axios
+- **Backend:** Node.js, Express.js, JWT, bcrypt, MongoDB Atlas, Mongoose
+- **AI Integration:** OpenAI API
+- **Optional:** LiveKit (real-time audio agent)
+
+---
+
+## Features
+- AI agent answers queries using OpenAI + knowledge base
+- Escalation flow when AI can’t answer (help request created)
+- Supervisor dashboard to view/respond to pending requests
+- Knowledge Base view to add/edit Q&A entries
+- Authentication system (JWT) for supervisors
+- Automatic updates to AI learning context after resolution
+- Request lifecycle: Pending → Resolved / Unresolved
+- Modern responsive UI using Tailwind CSS
+- Optional LiveKit integration for real-time audio
 
 ---
 
@@ -52,48 +66,7 @@ Human-in-the-Loop AI Supervisor/
 
 ---
 
-## Environment Variables
-Set these in your `.env` files and deployment dashboards:
-- `MONGODB_URI` - MongoDB Atlas connection string
-- `JWT_SECRET` - JWT signing secret
-- `OPENAI_API_KEY` - OpenAI API key
-- `LIVEKIT_URL` (optional) - LiveKit server URL
-- `LIVEKIT_API_KEY` (optional) - LiveKit API key
-- `LIVEKIT_API_SECRET` (optional) - LiveKit API secret
-
----
-
-## Setup & Installation
-
-### 1. Clone the Repository
-```sh
-git clone https://github.com/your-username/Human-in-the-Loop-AI-Supervisor.git
-cd Human-in-the-Loop-AI-Supervisor
-```
-
-### 2. Backend Setup
-```sh
-cd backend
-npm install
-# Create a .env file and add required environment variables
-npm start
-```
-
-### 3. Frontend Setup
-```sh
-cd frontend
-npm install
-npm run dev
-```
-
-### 4. Deployment
-- **Backend:** Deploy on Render or Railway. Set environment variables in the dashboard.
-- **Frontend:** Deploy on Vercel. Set API base URL to your backend deployment.
-- **Database:** Use MongoDB Atlas for cloud database hosting.
-
----
-
-## API Routes
+## API Endpoints
 | Method | Endpoint                        | Description                       |
 |--------|----------------------------------|-----------------------------------|
 | POST   | /api/supervisors/register        | Register a new supervisor         |
@@ -110,12 +83,73 @@ npm run dev
 
 ---
 
-## Example Usage Flow
-1. **Supervisor registers and logs in.**
-2. **AI agent answers basic queries using the knowledge base.**
-3. **Unknown queries are escalated to supervisors.**
-4. **Supervisor reviews and resolves the request, updating the knowledge base.**
-5. **AI learns from the updated knowledge base for future queries.**
+## Setup Instructions
+
+### 1. Clone the Repository
+```sh
+git clone https://github.com/dwdjitendra-cloud/Human-in-the-Loop-AI-Supervisor.git
+cd Human-in-the-Loop-AI-Supervisor
+```
+
+### 2. Backend Setup
+```sh
+cd backend
+npm install
+# Create a .env file and add required environment variables (see below)
+npm start
+```
+
+### 3. Frontend Setup
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+### 4. Deployment
+- **Backend:** Deployed on Render: https://human-in-the-loop-ai-supervisor-0umh.onrender.com
+- **Frontend:** Deployed on Vercel: https://reception-ai-inky.vercel.app
+- **Database:** Hosted on MongoDB Atlas
+
+---
+
+## Environment Variables (.env Example)
+```
+MONGODB_URI=your-mongodb-atlas-uri
+JWT_SECRET=your-jwt-secret
+OPENAI_API_KEY=your-openai-api-key
+LIVEKIT_URL=your-livekit-url         # Optional
+LIVEKIT_API_KEY=your-livekit-api-key # Optional
+LIVEKIT_API_SECRET=your-livekit-api-secret # Optional
+```
+
+---
+
+## How It Works
+1. User asks a question via the dashboard.
+2. AI agent (OpenAI + knowledge base) tries to answer.
+3. If the AI cannot answer, the request is escalated to a supervisor.
+4. Supervisor reviews and resolves the request, updating the knowledge base.
+5. AI learns from the updated knowledge base for future queries.
+
+---
+
+## Future Enhancements
+- Supervisor analytics dashboard (performance, response times)
+- Bulk import/export for knowledge base
+- Role-based access (admin, supervisor, viewer)
+- Multi-language support
+- Enhanced AI learning (feedback loop from supervisor corrections)
+- Integration with messaging platforms (WhatsApp, Slack, etc.)
+- Improved mobile experience
+
+---
+
+## Developer Info
+**Jitendra Kumar Dodwadiya**  
+MERN + ML Developer  
+[LinkedIn](https://www.linkedin.com/in/dwdjitendra/)  
+Email: jitendrakumar637587@gmail.com
 
 ---
 
@@ -124,14 +158,5 @@ MIT
 
 ---
 
-## Contribution
-Contributions are welcome! Please open issues or submit pull requests for improvements, bug fixes, or new features. Follow the existing code style and structure.
-
----
-
-## Contact
-**Jitendra Kumar Dodwadiya**
-
-Email: 
-jitendrakumar637587@gmail.com
+For questions, suggestions, or contributions, please open an issue or pull request on GitHub.
 
