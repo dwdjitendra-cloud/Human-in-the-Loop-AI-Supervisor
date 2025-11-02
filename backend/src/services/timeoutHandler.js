@@ -1,7 +1,7 @@
 import HelpRequest from '../models/HelpRequest.js';
 import { logger } from '../utils/logger.js';
 
-const TIMEOUT_MINUTES = 5;
+const TIMEOUT_MINUTES = parseInt(process.env.TIMEOUT_MINUTES || '5', 10);
 
 export const startTimeoutHandler = () => {
   setInterval(async () => {

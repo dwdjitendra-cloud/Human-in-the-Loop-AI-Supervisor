@@ -10,6 +10,7 @@ import { aiAgent } from './services/aiAgent.js';
 import helpRequestsRouter from './routes/helpRequests.js';
 import knowledgeBaseRouter from './routes/knowledgeBase.js';
 import supervisorsRouter from './routes/supervisors.js';
+import webhookRouter from './routes/webhook.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ connectDB();
 app.use('/api/help-requests', helpRequestsRouter);
 app.use('/api/knowledge-base', knowledgeBaseRouter);
 app.use('/api/supervisors', supervisorsRouter);
+app.use('/api/webhook', webhookRouter);
 
 app.post('/api/simulate-call', express.json(), async (req, res) => {
   const { customerName, question } = req.body;

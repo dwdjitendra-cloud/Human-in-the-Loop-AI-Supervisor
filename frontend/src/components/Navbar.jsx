@@ -44,6 +44,16 @@ export const Navbar = ({ currentPage, onNavigate, supervisorName, onLogout }) =>
               Knowledge Base
             </button>
             <button
+              onClick={() => onNavigate('learned')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentPage === 'learned'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:bg-slate-700'
+              }`}
+            >
+              Learned
+            </button>
+            <button
               onClick={() => onNavigate('test')}
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 currentPage === 'test'

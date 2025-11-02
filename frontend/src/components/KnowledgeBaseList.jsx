@@ -83,9 +83,17 @@ export const KnowledgeBaseList = ({ knowledge, onDelete, onAddNew }) => {
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-800">{entry.question}</h3>
                   <p className="text-gray-600 text-sm mt-2">{entry.answer}</p>
-                  <div className="mt-3 flex gap-2 items-center text-xs text-gray-500">
-                    <span className="bg-gray-100 px-2 py-1 rounded">{entry.category}</span>
-                    <span>Used {entry.usageCount} times</span>
+                  <div className="mt-3 flex gap-2 items-center text-xs">
+                    <span
+                      className={
+                        (entry.category || '').toLowerCase() === 'learned'
+                          ? 'bg-green-100 text-green-800 px-2 py-1 rounded'
+                          : 'bg-gray-100 text-gray-700 px-2 py-1 rounded'
+                      }
+                    >
+                      {entry.category || 'General'}
+                    </span>
+                    <span className="text-gray-500">Used {entry.usageCount} times</span>
                   </div>
                 </div>
                 <button

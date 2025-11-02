@@ -50,6 +50,8 @@ export default function App() {
         return <ResolvedRequests setErrorMessage={setErrorMessage} />;
       case 'knowledge':
         return <KnowledgePage setErrorMessage={setErrorMessage} />;
+      case 'learned':
+        return <KnowledgePage initialFilter="learned" setErrorMessage={setErrorMessage} />;
       case 'test':
         return <TestAI setErrorMessage={setErrorMessage} />;
       default:

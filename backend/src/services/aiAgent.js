@@ -2,6 +2,7 @@ import HelpRequest from '../models/HelpRequest.js';
 import KnowledgeBase from '../models/KnowledgeBase.js';
 import { logger } from '../utils/logger.js';
 import { triggerEscalation } from './escalation.js';
+import { notifyCustomerAnswered } from './notify.js';
 
 const SALON_INFO = {
   name: 'Bella\'s Hair Salon',
@@ -85,11 +86,17 @@ export const aiAgent = {
   },
 
   getDefaultAnswer(question) {
+    const lowerQuestion = question.toLowerCase();
     // Conversational and service-related questions
-    if (lowerQuestion.includes('what services do you offer') || lowerQuestion.includes('services available') || lowerQuestion.includes('can you help me with') || lowerQuestion.includes('do you provide') || lowerQuestion.includes('what can you do')) {
+    if (
+      lowerQuestion.includes('what services do you offer') ||
+      lowerQuestion.includes('services available') ||
+      lowerQuestion.includes('can you help me with') ||
+      lowerQuestion.includes('do you provide') ||
+      lowerQuestion.includes('what can you do')
+    ) {
       return `We offer the following services: ${SALON_INFO.services.join(', ')}. If you have a specific need, just ask!`;
     }
-    const lowerQuestion = question.toLowerCase();
 
     if (lowerQuestion.includes('how are you') || lowerQuestion.includes('how r u') || lowerQuestion.includes('how do you do')) {
       return "I'm an AI assistant, here to help you! How can I assist you today?";
@@ -121,6 +128,9 @@ export const aiAgent = {
   async followUpWithCustomer(customerName, answer, helpRequestId) {
   logger.info(`Automated Agent following up with ${customerName} - Answer: "${answer}"`);
     logger.info(`[CUSTOMER NOTIFICATION] ${customerName}: Your question has been answered - ${answer}`);
+
+    // Optional webhook delivery
+    notifyCustomerAnswered({ customerName, answer, helpRequestId }).catch(() => {});
 
     return {
       success: true,

@@ -1,5 +1,6 @@
 import HelpRequest from '../models/HelpRequest.js';
 import { logger } from '../utils/logger.js';
+import { notifySupervisorHelpNeeded } from './notify.js';
 
 export const triggerEscalation = async (customerName, question) => {
   try {
@@ -26,4 +27,6 @@ export const notifySupervisor = (helpRequest) => {
   logger.info(`[SUPERVISOR NOTIFICATION] New unresolved request: ${helpRequest._id}`);
   logger.info(`[SUPERVISOR NOTIFICATION] Customer: ${helpRequest.customerName}`);
   logger.info(`[SUPERVISOR NOTIFICATION] Question: ${helpRequest.question}`);
+  // Fire-and-forget webhook notification (optional)
+  notifySupervisorHelpNeeded(helpRequest);
 };

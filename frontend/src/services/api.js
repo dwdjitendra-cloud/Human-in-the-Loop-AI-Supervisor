@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api';
+// Prefer env override for local/dev; fallback to deployed API to avoid breaking production
+const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL || 'https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -26,6 +27,7 @@ export const helpRequestsAPI = {
   create: (data) => api.post('/help-requests', data),
   resolve: (id, data) => api.post(`/help-requests/${id}/resolve`, data),
   delete: (id) => api.delete(`/help-requests/${id}`),
+  simulateLivekitCall: (data) => api.post('/help-requests/simulate-livekit-call', data),
 };
 
 export const knowledgeBaseAPI = {

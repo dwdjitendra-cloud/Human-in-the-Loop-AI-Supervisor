@@ -1,4 +1,5 @@
 import express from 'express';
+import { receiveCall } from '../services/livekitAgent.js';
 import {
   getAllHelpRequests,
   getHelpRequestById,
@@ -20,5 +21,16 @@ router.get('/:id', getHelpRequestById);
 router.post('/', createHelpRequest);
 router.post('/:id/resolve', resolveHelpRequest);
 router.delete('/:id', deleteHelpRequest);
+
+
+// Simulated LiveKit AI agent endpoint
+router.post('/simulate-livekit-call', async (req, res) => {
+  const { customerName, question } = req.body;
+  if (!customerName || !question) {
+    return res.status(400).json({ success: false, message: 'customerName and question required' });
+  }
+  const result = await receiveCall(customerName, question);
+  res.json({ success: true, data: result });
+});
 
 export default router;

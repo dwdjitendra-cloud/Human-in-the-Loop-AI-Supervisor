@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { aiAgentAPI } from '../services/api';
+import { aiAgentAPI, helpRequestsAPI } from '../services/api';
 
 export const TestAI = ({ onNewRequest }) => {
   const [customerName, setCustomerName] = useState('');
@@ -7,16 +7,16 @@ export const TestAI = ({ onNewRequest }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [callHistory, setCallHistory] = useState([]);
+  const [useLivekitSim, setUseLivekitSim] = useState(true);
 
   const handleTestCall = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await aiAgentAPI.simulateCall({
-        customerName,
-        question,
-      });
+      const response = useLivekitSim
+        ? await helpRequestsAPI.simulateLivekitCall({ customerName, question })
+        : await aiAgentAPI.simulateCall({ customerName, question });
 
       const callData = {
         id: Date.now(),
@@ -102,11 +102,16 @@ export const TestAI = ({ onNewRequest }) => {
               </p>
               <div className="mt-3 p-3 bg-white rounded border border-blue-300">
                 <p className="text-xs font-semibold text-gray-700 mb-1">Automated Response:</p>
-                <p className="text-sm text-gray-600 italic">"{result.response.response}"</p>
+                <p className="text-sm text-gray-600 italic">"{result.response.response || result.response.answer || (result.response.success === false && 'Escalated to supervisor')}"</p>
               </div>
               {result.response.fromKnowledge && (
                 <p className="text-xs text-green-700 mt-2 font-semibold">
                   Source: Knowledge Base
+                </p>
+              )}
+              {useLivekitSim && result.response.helpRequestId && (
+                <p className="text-xs text-blue-700 mt-2 font-semibold">
+                  Pending Help Request ID: {result.response.helpRequestId}
                 </p>
               )}
             </div>
@@ -143,3 +148,13 @@ export const TestAI = ({ onNewRequest }) => {
     </div>
   );
 };
+
+                    <label className="flex items-center text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        className="mr-2"
+                        checked={useLivekitSim}
+                        onChange={(e) => setUseLivekitSim(e.target.checked)}
+                      />
+                      Use LiveKit Simulation endpoint
+                    </label>
