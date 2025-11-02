@@ -1,162 +1,175 @@
-# HIL-AI (Human-in-the-Loop AI Supervisor Dashboard)
+# Human-in-the-Loop AI Supervisor Dashboard
 
-## Project Overview
-HIL-AI is a full-stack MERN web dashboard for customer support that combines AI automation with human supervision. AI agents answer customer questions using a knowledge base. If the AI cannot answer, the query is escalated to a human supervisor, who reviews, resolves, and updates the knowledge base—making the AI smarter over time.
+## Overview
+This project delivers a production-ready, human-in-the-loop supervisor workflow on a MERN stack. An automated agent answers common questions using a knowledge base and sensible defaults. When a question is not known, the request is escalated to a human supervisor who reviews, resolves, and can save the final answer back to the knowledge base. Over time, the system improves based on what supervisors teach it.
 
----
+- Backend: Node.js/Express with MongoDB (Mongoose)
+- Frontend: React (Vite) with Tailwind CSS
+- Agent behavior: built-in knowledge base search + default business rules; an optional LiveKit simulation endpoint demonstrates how a real-time agent would behave
 
-## Demo Links
-- **Backend (Render):** https://human-in-the-loop-ai-supervisor-0umh.onrender.com
-- **Frontend (Vercel):** https://reception-ai-inky.vercel.app
-- **GitHub Repo:** https://github.com/dwdjitendra-cloud/Human-in-the-Loop-AI-Supervisor
+Live deployments (if enabled):
+- Backend (Render): https://human-in-the-loop-ai-supervisor-0umh.onrender.com
+- Frontend (Vercel): https://reception-ai-inky.vercel.app
+- Repository: https://github.com/dwdjitendra-cloud/Human-in-the-Loop-AI-Supervisor
 
----
+## Key Features
+- End-to-end help request lifecycle: Pending → Resolved or Unresolved (via timeout)
+- Supervisor dashboard for Pending, Resolved, and Unresolved queues
+- Knowledge Base management with “Learned” entries created during resolution
+- Automated agent with two modes: generic HTTP simulation and LiveKit-style simulation
+- Optional outbound notifications via webhook on escalation and customer follow-up
+- Configurable timeout for auto-marking stale pending requests
 
-## Architecture Diagram (Text Description)
-- User submits a question via the frontend (React + Vercel)
-- AI agent (OpenAI + knowledge base) tries to answer
-- If AI cannot answer, request is escalated to supervisor
-- Supervisor reviews and resolves the request, updating the knowledge base
-- AI uses updated knowledge base for future queries
-- All data is stored in MongoDB Atlas, accessed via Express.js backend (Render)
+## Architecture (text)
+1) Customer question is submitted from the frontend.
+2) Backend agent attempts to answer by:
+	 - Searching the knowledge base for an existing match
+	 - Falling back to default answers (hours, location, services, phone)
+3) If no answer is found, a Pending help request is created and supervisors are notified.
+4) A supervisor resolves the request in the dashboard and can save the resolution to the knowledge base.
+5) The agent follows up to the customer and learned answers are available for future questions.
 
----
-
-## Tech Stack
-- **Frontend:** React.js (Vite), Tailwind CSS, Axios
-- **Backend:** Node.js, Express.js, JWT, bcrypt, MongoDB Atlas, Mongoose
-- **AI Integration:** OpenAI API
-- **Optional:** LiveKit (real-time audio agent)
-
----
-
-## Features
-- AI agent answers queries using OpenAI + knowledge base
-- Escalation flow when AI can’t answer (help request created)
-- Supervisor dashboard to view/respond to pending requests
-- Knowledge Base view to add/edit Q&A entries
-- Authentication system (JWT) for supervisors
-- Automatic updates to AI learning context after resolution
-- Request lifecycle: Pending → Resolved / Unresolved
-- Modern responsive UI using Tailwind CSS
-- Optional LiveKit integration for real-time audio
-
----
+Storage: MongoDB via Mongoose. Backend exposes a simple REST API consumed by the React frontend.
 
 ## Folder Structure
 ```
 Human-in-the-Loop AI Supervisor/
 ├── backend/
 │   ├── src/
+│   │   ├── config/
 │   │   ├── controllers/
 │   │   ├── models/
 │   │   ├── routes/
 │   │   ├── services/
-│   │   ├── utils/
-│   │   └── config/
+│   │   └── utils/
 │   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── index.css
-│   └── package.json
+└── frontend/
+		├── src/
+		│   ├── components/
+		│   ├── pages/
+		│   ├── services/
+		│   └── index.css
+		└── package.json
 ```
 
----
+## Backend API
+Base URL: http://localhost:5000/api (or your deployed URL)
 
-## API Endpoints
-| Method | Endpoint                        | Description                       |
-|--------|----------------------------------|-----------------------------------|
-| POST   | /api/supervisors/register        | Register a new supervisor         |
-| POST   | /api/supervisors/login           | Login and get JWT                 |
-| GET    | /api/supervisors/:id             | Get supervisor details            |
-| GET    | /api/help-requests               | List all help requests (paginated)|
-| GET    | /api/help-requests/pending       | List pending requests (paginated) |
-| GET    | /api/help-requests/resolved      | List resolved requests (paginated)|
-| POST   | /api/help-requests/:id/resolve   | Resolve a help request            |
-| GET    | /api/knowledge-base              | List knowledge base entries       |
-| POST   | /api/knowledge-base              | Add knowledge base entry          |
-| PUT    | /api/knowledge-base/:id          | Update knowledge base entry       |
-| DELETE | /api/knowledge-base/:id          | Delete knowledge base entry       |
+Help Requests
+- GET /help-requests: List all (paginated via query params page, limit)
+- GET /help-requests/pending: List pending
+- GET /help-requests/resolved: List resolved
+- GET /help-requests/unresolved: List unresolved
+- GET /help-requests/:id: Get one
+- POST /help-requests: Create (rarely needed directly by UI)
+- POST /help-requests/:id/resolve: Mark resolved with payload { answer, supervisorId, saveToKnowledgeBase }
+- DELETE /help-requests/:id: Remove
 
----
+Knowledge Base
+- GET /knowledge-base: List entries (paginated)
+- GET /knowledge-base/:id: Get one
+- POST /knowledge-base: Create
+- PUT /knowledge-base/:id: Update
+- DELETE /knowledge-base/:id: Delete
+- GET /knowledge-base/search?q=...: Search
 
-## Setup Instructions
+Agent Simulation
+- POST /simulate-call: Text-only simulation that returns either an answer or an escalation with helpRequestId
+- POST /help-requests/simulate-livekit-call: LiveKit-style simulation (no SDK connection) with the same behavior pattern
 
-### 1. Clone the Repository
-```sh
-git clone https://github.com/dwdjitendra-cloud/Human-in-the-Loop-AI-Supervisor.git
-cd Human-in-the-Loop-AI-Supervisor
+Health
+- GET /health: Simple health check
+
+## Frontend
+- Pages: Pending Requests, Resolved, Unresolved, Knowledge Base (with Learned filter), Test Automated Agent, Login
+- Components: Navbar, RequestList, KnowledgeBaseList
+
+The Test Automated Agent page lets you:
+- Enter a customer name and a question
+- Toggle between the generic simulation and the LiveKit-style simulation
+- See the latest result and call history
+
+## Environment Variables
+
+Backend (.env)
+```
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/human-in-loop-ai
+JWT_SECRET=change-me
+
+# Optional
+TIMEOUT_MINUTES=5
+NOTIFY_WEBHOOK_URL=http://localhost:5000/api/webhook/notify
+
+# Optional LiveKit credentials if you integrate a real SDK later
+LIVEKIT_URL=
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
 ```
 
-### 2. Backend Setup
-```sh
+Frontend (.env.local)
+```
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
+## Local Setup
+1) Backend
+```
 cd backend
 npm install
-# Create a .env file and add required environment variables (see below)
+cp .env.example .env   # then edit values (ensure MONGO_URI)
 npm start
 ```
-
-### 3. Frontend Setup
-```sh
+2) Frontend
+```
 cd frontend
 npm install
+echo VITE_API_BASE_URL=http://localhost:5000/api > .env.local
 npm run dev
 ```
 
-### 4. Deployment
-- **Backend:** Deployed on Render: https://human-in-the-loop-ai-supervisor-0umh.onrender.com
-- **Frontend:** Deployed on Vercel: https://reception-ai-inky.vercel.app
-- **Database:** Hosted on MongoDB Atlas
-
----
-
-## Environment Variables (.env Example)
+## Quick Tests (PowerShell)
+Health
 ```
-MONGODB_URI=your-mongodb-atlas-uri
-JWT_SECRET=your-jwt-secret
-OPENAI_API_KEY=your-openai-api-key
-LIVEKIT_URL=your-livekit-url         # Optional
-LIVEKIT_API_KEY=your-livekit-api-key # Optional
-LIVEKIT_API_SECRET=your-livekit-api-secret # Optional
+Invoke-RestMethod -Uri 'http://localhost:5000/api/health' -Method Get | ConvertTo-Json -Depth 5
+```
+Agent simulation
+```
+Invoke-RestMethod -Uri 'http://localhost:5000/api/simulate-call' -Method Post -Body (@{
+	customerName='Alice'; question='Where are you located?'
+} | ConvertTo-Json) -ContentType 'application/json' | ConvertTo-Json -Depth 5
+```
+LiveKit-style simulation
+```
+Invoke-RestMethod -Uri 'http://localhost:5000/api/help-requests/simulate-livekit-call' -Method Post -Body (@{
+	customerName='Bob'; question='Do you offer student discounts?'
+} | ConvertTo-Json) -ContentType 'application/json' | ConvertTo-Json -Depth 5
 ```
 
----
+## Data Model Summary
+- HelpRequest: { customerName, question, status: Pending|Resolved|Unresolved, supervisorId?, answer?, createdAt, resolvedAt, isTimeoutResolved }
+- KnowledgeBase: { question, answer, category, helpRequestId?, usageCount, createdAt, updatedAt }
+- Supervisor: { name, email, password (hashed), createdAt }
 
-## How It Works
-1. User asks a question via the dashboard.
-2. AI agent (OpenAI + knowledge base) tries to answer.
-3. If the AI cannot answer, the request is escalated to a supervisor.
-4. Supervisor reviews and resolves the request, updating the knowledge base.
-5. AI learns from the updated knowledge base for future queries.
+## Lifecycle and Timeout
+- New unknown questions create a Pending request
+- A background handler marks Pending requests older than TIMEOUT_MINUTES as Unresolved
+- Resolutions can optionally create a “Learned” KnowledgeBase entry and trigger a customer follow-up notification
 
----
+## Notifications
+Outbound notifications are sent to the console and optionally POSTed to NOTIFY_WEBHOOK_URL. A basic webhook receiver exists at POST /api/webhook/notify for local testing.
 
-## Future Enhancements
-- Supervisor analytics dashboard (performance, response times)
-- Bulk import/export for knowledge base
-- Role-based access (admin, supervisor, viewer)
-- Multi-language support
-- Enhanced AI learning (feedback loop from supervisor corrections)
-- Integration with messaging platforms (WhatsApp, Slack, etc.)
-- Improved mobile experience
+## Deployment Notes
+- Backend: Render or any Node host; set MONGO_URI, JWT_SECRET, TIMEOUT_MINUTES, NOTIFY_WEBHOOK_URL
+- Frontend: Vercel or any static host; set VITE_API_BASE_URL to point at the backend’s /api
 
----
-
-## Developer Info
-**Jitendra Kumar Dodwadiya**  
-MERN + ML Developer  
-[LinkedIn](https://www.linkedin.com/in/dwdjitendra/)  
-Email: jitendrakumar637587@gmail.com
-
----
+## Troubleshooting
+- Health check fails: confirm port and base URL. Default port is 5000 unless PORT is set.
+- CORS errors: the backend enables CORS by default. Verify VITE_API_BASE_URL matches the backend base URL.
+- Mongo connection issues: verify MONGO_URI is reachable and credentials are correct.
 
 ## License
 MIT
 
----
-
-For questions, suggestions, or contributions, please open an issue or pull request on GitHub.
+For questions or contributions, open an issue or pull request.
 

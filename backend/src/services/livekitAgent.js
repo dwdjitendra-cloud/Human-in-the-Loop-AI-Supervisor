@@ -1,4 +1,4 @@
-// Simulated LiveKit AI Agent for HIL-AI project
+// Simulated LiveKit call handler for this project
 // In this simulation we don't actually connect to LiveKit; we mimic call handling behavior.
 // Credentials would be loaded from .env if/when we integrate the SDK.
 
@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { triggerEscalation, notifySupervisor } from './escalation.js';
+import { textToSpeech } from './textToSpeech.js';
 
 const LIVEKIT_URL = process.env.LIVEKIT_URL;
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
@@ -40,10 +41,18 @@ export async function receiveCall(customerName, question) {
   return escalate(customerName, question);
 }
 
-export function respond(customerName, answer) {
+export async function respond(customerName, answer) {
   console.log(`[LiveKit] Responding to ${customerName}: "${answer}"`);
-  // Simulate LiveKit publish (in real app, send audio/text)
-  return { success: true, answer };
+
+  try {
+    const audioBuffer = await textToSpeech(answer);
+    console.log(`[LiveKit] Audio generated for ${customerName}`);
+    // Simulate LiveKit publish (in real app, send audio to LiveKit)
+    return { success: true, answer, audio: audioBuffer };
+  } catch (error) {
+    console.error(`[LiveKit] TTS failed for ${customerName}:`, error.message);
+    return { success: false, error: 'TTS failed' };
+  }
 }
 
 export async function escalate(customerName, question) {

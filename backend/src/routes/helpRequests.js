@@ -23,7 +23,7 @@ router.post('/:id/resolve', resolveHelpRequest);
 router.delete('/:id', deleteHelpRequest);
 
 
-// Simulated LiveKit AI agent endpoint
+// Simulated LiveKit endpoint
 router.post('/simulate-livekit-call', async (req, res) => {
   const { customerName, question } = req.body;
   if (!customerName || !question) {

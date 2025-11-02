@@ -131,3 +131,41 @@ export const searchKnowledge = asyncHandler(async (req, res) => {
     data: results,
   });
 });
+
+export const saveSupervisorAnswer = asyncHandler(async (req, res) => {
+  const { question, answer } = req.body;
+
+  if (!question || !answer) {
+    throw new AppError('Both question and answer are required', 400);
+  }
+
+  const existingKnowledge = await KnowledgeBase.findOne({ question });
+  if (existingKnowledge) {
+    existingKnowledge.answer = answer;
+    existingKnowledge.updatedAt = new Date();
+    await existingKnowledge.save();
+
+    logger.info(`Knowledge base entry updated: ${existingKnowledge._id}`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Knowledge base entry updated',
+      data: existingKnowledge,
+    });
+  }
+
+  const newKnowledge = new KnowledgeBase({
+    question,
+    answer,
+    category: 'Supervisor',
+  });
+
+  await newKnowledge.save();
+  logger.info(`New knowledge base entry created: ${newKnowledge._id}`);
+
+  res.status(201).json({
+    success: true,
+    message: 'Knowledge base entry created',
+    data: newKnowledge,
+  });
+});

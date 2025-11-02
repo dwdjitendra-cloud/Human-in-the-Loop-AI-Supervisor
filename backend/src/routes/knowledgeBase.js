@@ -6,6 +6,7 @@ import {
   updateKnowledge,
   deleteKnowledge,
   searchKnowledge,
+  saveSupervisorAnswer,
 } from '../controllers/knowledgeBaseController.js';
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.get('/:id', getKnowledgeById);
 router.post('/', createKnowledge);
 router.put('/:id', updateKnowledge);
 router.delete('/:id', deleteKnowledge);
+router.post('/supervisor-answer', saveSupervisorAnswer);
 
 export default router;

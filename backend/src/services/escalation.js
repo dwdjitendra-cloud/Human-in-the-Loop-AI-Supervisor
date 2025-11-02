@@ -30,3 +30,20 @@ export const notifySupervisor = (helpRequest) => {
   // Fire-and-forget webhook notification (optional)
   notifySupervisorHelpNeeded(helpRequest);
 };
+
+export const triggerHelpRequestEvent = async (customerName, question) => {
+  try {
+    const helpRequest = await triggerEscalation(customerName, question);
+
+    logger.info(`[HELP_REQUEST EVENT] Triggered for customer: ${customerName}`);
+    logger.info(`[HELP_REQUEST EVENT] Question: ${question}`);
+
+    // Notify supervisor about the help request
+    notifySupervisor(helpRequest);
+
+    return helpRequest;
+  } catch (error) {
+    logger.error('Error triggering help_request event:', error.message);
+    throw error;
+  }
+};
