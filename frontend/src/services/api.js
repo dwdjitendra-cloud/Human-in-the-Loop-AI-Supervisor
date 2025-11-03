@@ -2,19 +2,12 @@ import axios from 'axios';
 
 const envBase = import.meta?.env?.VITE_API_BASE_URL;
 const isBrowser = typeof window !== 'undefined';
-const isLocalhost = isBrowser && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-const API_BASE_URL = envBase || (isLocalhost ? 'http://localhost:5000/api' : undefined);
+const hostname = isBrowser ? window.location.hostname : '';
+const isLocalhost = isBrowser && /^(localhost|127\.0\.0\.1)$/i.test(hostname);
+// Prefer env; use localhost in dev; otherwise rely on relative paths (for rewrites)
+const API_BASE_URL = envBase || (isLocalhost ? 'http://localhost:5000/api' : '');
 
-if (!API_BASE_URL) {
-  // eslint-disable-next-line no-console
-  console.error('[API] VITE_API_BASE_URL is not set. Please configure it to your backend URL (e.g., https://<render>.onrender.com/api).');
-}
-
-if (import.meta?.env?.DEV) {
-  // Lightweight debug to verify which API base is used in dev
-  // eslint-disable-next-line no-console
-  console.debug('[API] baseURL =', API_BASE_URL);
-}
+// no console noise in production builds
 
 const api = axios.create({
   baseURL: API_BASE_URL,

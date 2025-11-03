@@ -145,3 +145,8 @@ See DEPLOYMENT.md for full details.
 ## License
 MIT
 
+## Contact
+Author: Jitendra Dodwadiya  
+LinkedIn: https://www.linkedin.com/in/dwdjitendra/  
+Portfolio: https://dwdjitendra-portfolio.vercel.app/
+

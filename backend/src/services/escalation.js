@@ -4,12 +4,19 @@ import { notifySupervisorHelpNeeded } from './notify.js';
 
 export const triggerEscalation = async (customerName, question) => {
   try {
-    const helpRequest = new HelpRequest({
+    // De-duplicate: if an identical pending request already exists, reuse it
+    const existing = await HelpRequest.findOne({
       customerName,
       question,
       status: 'Pending',
-    });
+    }).sort({ createdAt: -1 });
 
+    if (existing) {
+      logger.info(`[SUPERVISOR ALERT] Duplicate pending detected, reusing request ${existing._id}`);
+      return existing;
+    }
+
+    const helpRequest = new HelpRequest({ customerName, question, status: 'Pending' });
     await helpRequest.save();
 
     logger.info(`[SUPERVISOR ALERT] New help request from ${customerName}`);

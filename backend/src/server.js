@@ -216,15 +216,9 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
       }
     }
 
-    // Chat fallback
+    // If agent could not provide an answer, return a safe fallback without chat generation
     if (!agentUsed) {
-      try {
-        const inputText = transcript && transcript.trim().length > 0 ? transcript : 'Caller spoke, content unavailable.';
-        answer = await chatReceptionist(inputText);
-      } catch (chatErr) {
-        logger.warn(`[STT-RESPOND] Chat failed, using default answer. reason=${chatErr.message}`);
-        answer = "Let me check with my supervisor and get back to you.";
-      }
+      answer = "Let me check with my supervisor and get back to you.";
     }
 
   // TTS
