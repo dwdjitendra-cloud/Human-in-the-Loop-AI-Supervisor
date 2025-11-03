@@ -37,7 +37,7 @@ export const aiAgent = {
 
       if (knownAnswer) {
         logger.info(`Found answer in knowledge base for: ${question}`);
-        const response = `Thank you for your question! Here's what I found: ${knownAnswer.answer}`;
+        const response = knownAnswer.answer;
 
         knownAnswer.usageCount += 1;
         await knownAnswer.save();

@@ -30,6 +30,11 @@ export const LiveVoice = () => {
   const audioCtxRef = useRef(null);
   const analyserRef = useRef(null);
   const rafRef = useRef(null);
+  const currentLevelRef = useRef(0); // live mic level for simple VAD
+  const lastSentRef = useRef(0);     // last time an audio chunk was sent
+  const vadThresholdRef = useRef(10); // gate threshold on 0-100 scale
+  const lastVoiceActivityRef = useRef(0); // last time level crossed threshold
+  const warmupUntilRef = useRef(0); // grace period to ignore degradation at start
 
   const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL;
 
@@ -124,6 +129,10 @@ export const LiveVoice = () => {
         startProbeTimer();
         return;
       }
+      // reset degradation tracking and apply a short warmup period
+      serverFailCountRef.current = 0;
+      cooldownUntilRef.current = 0;
+      warmupUntilRef.current = Date.now() + 6000; // 6s grace
       const localAudio = localAudioTrackRef.current;
       if (!localAudio || !localAudio.mediaStreamTrack) {
         setError('Mic track not ready. Join first.');
@@ -133,19 +142,27 @@ export const LiveVoice = () => {
       const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : 'audio/webm';
-      const rec = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 32000 });
+      const rec = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 64000 });
       rec.ondataavailable = async (e) => {
         if (!e.data || e.data.size < 2048) return;
+        // Simple VAD gating to avoid sending silence; force periodic sends to keep context fresh
+        const now = Date.now();
+        const speaking = currentLevelRef.current >= vadThresholdRef.current;
+        const stale = now - (lastSentRef.current || 0) > 2500; // ensure at least every 2.5s
+        const spokeRecently = (now - (lastVoiceActivityRef.current || 0)) < 4000; // within last 4s
+        if (!speaking && !(stale && spokeRecently)) return;
         if (busyRef.current) return;
         busyRef.current = true;
         try {
           const resp = await voiceAPI.sttRespond(e.data, selectedServerVoice);
           const payload = resp?.data?.data || {};
           if (payload.transcript) setLastTranscript(payload.transcript);
-          if (payload.answer) setLastAnswer(payload.answer);
+          // Only show agent answer if we actually captured a transcript (avoid auto-print on silence)
+          if (payload.answer && payload.transcript && payload.transcript.trim() !== '') setLastAnswer(payload.answer);
           if (payload.audioBase64 && payload.mime) {
             enqueueTTS(payload.audioBase64, payload.mime);
           }
+          lastSentRef.current = now;
 
           const fallbackPhrase = "Let me check with my supervisor and get back to you.";
           const isBeep = payload?.mime === 'audio/wav';
@@ -153,14 +170,17 @@ export const LiveVoice = () => {
           const isFallbackAnswer = (payload?.answer || '').trim() === fallbackPhrase;
           const degraded = (isBeep && emptyTranscript) || isFallbackAnswer;
           if (degraded) {
-            serverFailCountRef.current += 1;
-            // set cooldown for 60s on degradation
-            cooldownUntilRef.current = Date.now() + 60_000;
+            // Ignore degradations during initial warmup window
+            if (Date.now() >= warmupUntilRef.current) {
+              serverFailCountRef.current += 1;
+              // set cooldown for 45s on degradation (slightly shorter)
+              cooldownUntilRef.current = Date.now() + 45_000;
+            }
           } else {
             serverFailCountRef.current = 0;
           }
 
-          if (!useBrowserFallback && serverFailCountRef.current >= 2) {
+          if (!useBrowserFallback && serverFailCountRef.current >= 3) {
             setNotice('Server speech is rate-limited. Switched to browser STT/TTS temporarily.');
             setUseBrowserFallback(true);
             setTimeout(() => {
@@ -174,7 +194,7 @@ export const LiveVoice = () => {
           setTimeout(() => { busyRef.current = false; }, 200);
         }
       };
-      rec.start(1000);
+      rec.start(600); // smaller chunks for lower latency
       recorderRef.current = rec;
     } catch (e) {
       setError(e.message || 'Failed to start loop');
@@ -258,6 +278,10 @@ export const LiveVoice = () => {
       const rms = Math.sqrt(sum / buf.length);
       const level = Math.min(100, Math.max(0, Math.round(rms * 140)));
       setMicLevel(level);
+      currentLevelRef.current = level;
+      if (level >= vadThresholdRef.current) {
+        lastVoiceActivityRef.current = Date.now();
+      }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
