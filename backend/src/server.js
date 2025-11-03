@@ -83,8 +83,7 @@ app.post('/api/simulate-call', express.json(), async (req, res) => {
   });
 });
 
-// LiveKit: generate access token
-// POST /api/livekit/token { identity, roomName }
+// LiveKit token
 app.post('/api/livekit/token', async (req, res) => {
   try {
     const { identity, roomName } = req.body || {};
@@ -118,7 +117,7 @@ app.post('/api/livekit/token', async (req, res) => {
   }
 });
 
-// Convenience GET for debugging token issues: /api/livekit/token?identity=guest&roomName=salon-room
+// Token (GET) for quick checks
 app.get('/api/livekit/token', async (req, res) => {
   try {
     const identity = (req.query.identity || '').toString();
@@ -141,8 +140,7 @@ app.get('/api/livekit/token', async (req, res) => {
   }
 });
 
-// Simple text-to-speech endpoint for quick testing in a browser or Postman
-// GET /api/voice/tts?text=Hello
+// TTS test
 app.get('/api/voice/tts', async (req, res) => {
   try {
     const text = (req.query.text || '').toString();
@@ -158,8 +156,7 @@ app.get('/api/voice/tts', async (req, res) => {
   }
 });
 
-// End-to-end voice reply for a customer question; returns text and audio (base64)
-// POST /api/voice/reply { customerName, question }
+// Voice reply (text + audio)
 app.post('/api/voice/reply', async (req, res) => {
   try {
     const { customerName, question } = req.body || {};
@@ -183,7 +180,7 @@ app.post('/api/voice/reply', async (req, res) => {
   }
 });
 
-// STT -> Chat -> TTS: send an audio file, get transcript + reply + audio back
+// STT → reply → TTS
 const upload = multer();
 app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
   try {
@@ -197,7 +194,7 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
   let transcript = '';
   let answer = '';
 
-    // Try STT; if it fails (e.g., missing OPENAI_API_KEY), fall back to a safe path
+    // STT
     try {
       transcript = await transcribeAudio(file.buffer, file.originalname || 'audio.webm');
     } catch (sttErr) {
@@ -205,7 +202,7 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
       transcript = '';
     }
 
-    // Prefer our deterministic agent logic (KB + defaults + escalation) for consistent answers
+    // Agent
     let agentUsed = false;
     if (transcript && transcript.trim().length > 0) {
       try {
@@ -219,7 +216,7 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
       }
     }
 
-    // If agent didn't provide an answer, try Chat as a fallback
+    // Chat fallback
     if (!agentUsed) {
       try {
         const inputText = transcript && transcript.trim().length > 0 ? transcript : 'Caller spoke, content unavailable.';
@@ -230,7 +227,7 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
       }
     }
 
-  // TTS the answer (this function already falls back to a beep if OpenAI TTS is unavailable)
+  // TTS
   const preferredVoice = (req.body && req.body.voice) ? String(req.body.voice) : undefined;
   const tts = await textToSpeech(answer, preferredVoice);
     const audioBase64 = tts.buffer.toString('base64');
@@ -241,8 +238,7 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
   }
 });
 
-// LiveKit simulation route: returns spoken audio for known Qs or escalates
-// POST /api/livekit/simulate-call { customerName, question }
+// LiveKit-style simulation
 app.post('/api/livekit/simulate-call', async (req, res) => {
   try {
     const { customerName, question } = req.body || {};

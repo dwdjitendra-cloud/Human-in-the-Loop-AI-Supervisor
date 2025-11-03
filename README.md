@@ -1,93 +1,75 @@
-# Human-in-the-Loop AI Supervisor Dashboard
+# Human-in-the-Loop AI Supervisor
 
-## Overview
-This project delivers a production-ready, human-in-the-loop supervisor workflow on a MERN stack. An automated agent answers common questions using a knowledge base and sensible defaults. When a question is not known, the request is escalated to a human supervisor who reviews, resolves, and can save the final answer back to the knowledge base. Over time, the system improves based on what supervisors teach it.
+Full-stack supervisor workflow for handling customer questions with a learning loop. The automated agent answers from a knowledge base and defaults; unknown questions are escalated to supervisors who resolve and optionally save answers back to the knowledge base.
 
-- Backend: Node.js/Express with MongoDB (Mongoose)
-- Frontend: React (Vite) with Tailwind CSS
-- Agent behavior: built-in knowledge base search + default business rules; an optional LiveKit simulation endpoint demonstrates how a real-time agent would behave
+- Backend: Node.js / Express / MongoDB (Mongoose)
+- Frontend: React (Vite) + Tailwind CSS
+- Voice: optional server STT/Chat/TTS; browser STT/TTS fallback; LiveKit token endpoint
 
-Live deployments (if enabled):
+Live deployments
 - Backend (Render): https://human-in-the-loop-ai-supervisor-0umh.onrender.com
 - Frontend (Vercel): https://reception-ai-inky.vercel.app
-- Repository: https://github.com/dwdjitendra-cloud/Human-in-the-Loop-AI-Supervisor
 
-## Key Features
-- End-to-end help request lifecycle: Pending → Resolved or Unresolved (via timeout)
-- Supervisor dashboard for Pending, Resolved, and Unresolved queues
-- Knowledge Base management with “Learned” entries created during resolution
-- Automated agent with two modes: generic HTTP simulation and LiveKit-style simulation
-- Optional outbound notifications via webhook on escalation and customer follow-up
-- Configurable timeout for auto-marking stale pending requests
+## Features
+- Help request lifecycle: Pending, Resolved, Unresolved (timeout)
+- Supervisor dashboard and Knowledge Base management
+- Automated agent: KB lookup → defaults → escalation
+- Voice endpoints: text-to-speech, STT→reply→TTS, token route for LiveKit
+- Browser fallback for speech (no server key required)
+- Basic webhook support for notifications
 
-## Architecture (text)
-1) Customer question is submitted from the frontend.
-2) Backend agent attempts to answer by:
-	 - Searching the knowledge base for an existing match
-	 - Falling back to default answers (hours, location, services, phone)
-3) If no answer is found, a Pending help request is created and supervisors are notified.
-4) A supervisor resolves the request in the dashboard and can save the resolution to the knowledge base.
-5) The agent follows up to the customer and learned answers are available for future questions.
+## Architecture
+1. Frontend sends question.
+2. Backend agent
+   - tries KB
+   - falls back to defaults (hours, address, services, phone)
+   - escalates if unknown
+3. Supervisors resolve, optionally save answer to KB.
+4. Agent follows up using saved answer.
 
-Storage: MongoDB via Mongoose. Backend exposes a simple REST API consumed by the React frontend.
+MongoDB stores help requests, KB entries, and supervisors. The frontend consumes a REST API.
 
-## Folder Structure
+## Project Structure
 ```
 Human-in-the-Loop AI Supervisor/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   └── utils/
-│   └── package.json
-└── frontend/
-		├── src/
-		│   ├── components/
-		│   ├── pages/
-		│   ├── services/
-		│   └── index.css
-		└── package.json
+├─ backend/
+│  └─ src/{config,controllers,models,routes,services,utils}
+└─ frontend/
+   └─ src/{components,pages,services}
 ```
 
-## Backend API
-Base URL: http://localhost:5000/api (or your deployed URL)
+## API (base: /api)
 
 Help Requests
-- GET /help-requests: List all (paginated via query params page, limit)
-- GET /help-requests/pending: List pending
-- GET /help-requests/resolved: List resolved
-- GET /help-requests/unresolved: List unresolved
-- GET /help-requests/:id: Get one
-- POST /help-requests: Create (rarely needed directly by UI)
-- POST /help-requests/:id/resolve: Mark resolved with payload { answer, supervisorId, saveToKnowledgeBase }
-- DELETE /help-requests/:id: Remove
+- GET /help-requests
+- GET /help-requests/pending
+- GET /help-requests/resolved
+- GET /help-requests/unresolved
+- GET /help-requests/:id
+- POST /help-requests
+- POST /help-requests/:id/resolve
+- DELETE /help-requests/:id
 
 Knowledge Base
-- GET /knowledge-base: List entries (paginated)
-- GET /knowledge-base/:id: Get one
-- POST /knowledge-base: Create
-- PUT /knowledge-base/:id: Update
-- DELETE /knowledge-base/:id: Delete
-- GET /knowledge-base/search?q=...: Search
+- GET /knowledge-base
+- GET /knowledge-base/:id
+- POST /knowledge-base
+- PUT /knowledge-base/:id
+- DELETE /knowledge-base/:id
+- GET /knowledge-base/search?q=...
 
-Agent Simulation
-- POST /simulate-call: Text-only simulation that returns either an answer or an escalation with helpRequestId
-- POST /help-requests/simulate-livekit-call: LiveKit-style simulation (no SDK connection) with the same behavior pattern
+Agent
+- POST /simulate-call
+- POST /help-requests/simulate-livekit-call
+
+Voice
+- GET /voice/tts?text=Hello
+- POST /voice/reply { customerName, question }
+- POST /voice/stt-respond (multipart: audio=Blob, optional voice)
+- POST /livekit/token { identity, roomName }
 
 Health
-- GET /health: Simple health check
-
-## Frontend
-- Pages: Pending Requests, Resolved, Unresolved, Knowledge Base (with Learned filter), Test Automated Agent, Login
-- Components: Navbar, RequestList, KnowledgeBaseList
-
-The Test Automated Agent page lets you:
-- Enter a customer name and a question
-- Toggle between the generic simulation and the LiveKit-style simulation
-- See the latest result and call history
+- GET /health
 
 ## Environment Variables
 
@@ -96,105 +78,70 @@ Backend (.env)
 PORT=5000
 NODE_ENV=development
 MONGO_URI=mongodb://localhost:27017/human-in-loop-ai
-# Allow server to start without DB in dev
 ALLOW_NO_DB=1
 JWT_SECRET=change-me
 
-# OpenAI (optional but recommended for real STT/Chat/TTS)
 OPENAI_API_KEY=
-# Optional voice label for TTS (e.g., alloy)
 TTS_VOICE=alloy
 
-# LiveKit (optional for Live Voice)
 LIVEKIT_URL=
 LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
 
-# Optional notifications / timeouts
-TIMEOUT_MINUTES=5
-NOTIFY_WEBHOOK_URL=http://localhost:5000/api/webhook/notify
+# CORS: comma-separated or wildcard patterns (e.g., https://*.vercel.app)
+CORS_ORIGIN=
 ```
 
 Frontend (.env.local)
 ```
 VITE_API_BASE_URL=http://localhost:5000/api
-# LiveKit server URL (wss) if you use Live Voice
 VITE_LIVEKIT_URL=
 ```
 
-## Local Setup
-1) Backend
+## Local Development
+Backend
 ```
 cd backend
 npm install
-cp .env.example .env   # then edit values (ensure MONGO_URI)
+cp .env.example .env  # set values
 npm start
 ```
-2) Frontend
+Frontend
 ```
 cd frontend
 npm install
 echo VITE_API_BASE_URL=http://localhost:5000/api > .env.local
-# optionally add LiveKit URL
-Add-Content .env.local "`nVITE_LIVEKIT_URL=wss://YOUR_LIVEKIT_HOST"
 npm run dev
 ```
 
-### Set secrets on Windows PowerShell
-```
-# Backend
-cd backend
-Copy-Item .env.example .env -Force
-# then edit .env to add your values (OPENAI_API_KEY, LIVEKIT_*, etc.)
-
-# Frontend
-cd ..\frontend
-Copy-Item .env.local.example .env.local -Force
-# then edit .env.local to set VITE_API_BASE_URL and optional VITE_LIVEKIT_URL
-```
-
-## Quick Tests (PowerShell)
-Health
+PowerShell quick checks
 ```
 Invoke-RestMethod -Uri 'http://localhost:5000/api/health' -Method Get | ConvertTo-Json -Depth 5
-```
-Agent simulation
-```
-Invoke-RestMethod -Uri 'http://localhost:5000/api/simulate-call' -Method Post -Body (@{
-	customerName='Alice'; question='Where are you located?'
-} | ConvertTo-Json) -ContentType 'application/json' | ConvertTo-Json -Depth 5
-```
-LiveKit-style simulation
-```
-Invoke-RestMethod -Uri 'http://localhost:5000/api/help-requests/simulate-livekit-call' -Method Post -Body (@{
-	customerName='Bob'; question='Do you offer student discounts?'
-} | ConvertTo-Json) -ContentType 'application/json' | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Uri 'http://localhost:5000/api/simulate-call' -Method Post -Body (@{customerName='Alice'; question='Hours?'} | ConvertTo-Json) -ContentType 'application/json' | ConvertTo-Json -Depth 5
 ```
 
-## Data Model Summary
-- HelpRequest: { customerName, question, status: Pending|Resolved|Unresolved, supervisorId?, answer?, createdAt, resolvedAt, isTimeoutResolved }
-- KnowledgeBase: { question, answer, category, helpRequestId?, usageCount, createdAt, updatedAt }
-- Supervisor: { name, email, password (hashed), createdAt }
+## Voice
+- Server TTS: /voice/tts and /voice/reply
+- Full loop: /voice/stt-respond (STT → agent/chat → TTS)
+- Browser fallback: SpeechRecognition + speechSynthesis in LiveVoice page
+- LiveKit: token route, client joins via VITE_LIVEKIT_URL
 
-## Lifecycle and Timeout
-- New unknown questions create a Pending request
-- A background handler marks Pending requests older than TIMEOUT_MINUTES as Unresolved
-- Resolutions can optionally create a “Learned” KnowledgeBase entry and trigger a customer follow-up notification
-
-## Notifications
-Outbound notifications are sent to the console and optionally POSTed to NOTIFY_WEBHOOK_URL. A basic webhook receiver exists at POST /api/webhook/notify for local testing.
-
-## Deployment Notes
-- Backend: Render or any Node host; set MONGO_URI, JWT_SECRET, TIMEOUT_MINUTES, NOTIFY_WEBHOOK_URL
-- Frontend: Vercel or any static host; set VITE_API_BASE_URL to point at the backend’s /api
+## Deployment
+- Backend: Render (Web Service). Set envs; health at /api/health.
+- Frontend: Vercel (Vite). Set VITE_API_BASE_URL to the backend /api URL.
+- Optional: vercel.json rewrites in frontend to proxy /api calls to Render.
+See DEPLOYMENT.md for full details.
 
 ## Troubleshooting
-- Health check fails: confirm port and base URL. Default port is 5000 unless PORT is set.
-- CORS errors: the backend enables CORS by default. Verify VITE_API_BASE_URL matches the backend base URL.
-- Mongo connection issues: verify MONGO_URI is reachable and credentials are correct.
+- 404 from /help-requests on Vercel: set VITE_API_BASE_URL or ensure vercel.json rewrites are active and the project root is frontend.
+- CORS errors: set CORS_ORIGIN on backend (supports comma list and wildcards).
+- Beep-only voice: missing/limited OpenAI key; browser fallback continues working.
+- Port conflicts locally: free port 5000 or set VITE_API_BASE_URL to deployed backend.
+
+## Security
+- Do not commit secrets. Rotate keys if exposed.
+- Restrict CORS_ORIGIN to your domains in production.
 
 ## License
 MIT
-
-For questions or contributions, open an issue or pull request.
 

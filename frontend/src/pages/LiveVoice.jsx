@@ -46,11 +46,9 @@ export const LiveVoice = () => {
       if (!token) throw new Error('No token returned');
 
       setStatus('connecting');
-      // Newer SDK pattern: instantiate Room and call room.connect, then publish local tracks
       const room = new LK.Room();
       await room.connect(LIVEKIT_URL, token);
 
-      // Create and publish a local microphone track
       const tracks = await LK.createLocalTracks({ audio: true, video: false });
       const audioTrack = tracks.find(t => t.kind === 'audio') || tracks[0];
       localAudioTrackRef.current = audioTrack || null;
@@ -61,7 +59,6 @@ export const LiveVoice = () => {
       roomRef.current = room;
       setStatus('connected');
 
-      // Track participants
       const refreshParticipants = () => {
         try {
           const rm = roomRef.current || room;
@@ -80,12 +77,10 @@ export const LiveVoice = () => {
       room.on(LK.RoomEvent.ParticipantConnected, refreshParticipants);
       room.on(LK.RoomEvent.ParticipantDisconnected, refreshParticipants);
 
-      // Start mic level meter
       try {
         startMicMeter(localAudioTrackRef.current);
       } catch {}
 
-      // Listen for disconnects and clean up promptly to avoid renegotiation on closed PC
       room.on(LK.RoomEvent.Disconnected, () => {
         setStatus('disconnected');
         stopLoop();
@@ -93,7 +88,6 @@ export const LiveVoice = () => {
         setParticipants([]);
       });
 
-      // If loop is toggled on already, start it now
       if (enableLoop) startLoop();
     } catch (e) {
       setError(e.message || 'Failed to join');
@@ -135,15 +129,14 @@ export const LiveVoice = () => {
         setError('Mic track not ready. Join first.');
         return;
       }
-      // Build a MediaStream and recorder for small chunks
       const stream = new MediaStream([localAudio.mediaStreamTrack]);
       const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : 'audio/webm';
       const rec = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 32000 });
       rec.ondataavailable = async (e) => {
-        if (!e.data || e.data.size < 2048) return; // skip tiny chunks
-        if (busyRef.current) return; // keep conversation smooth: one request at a time
+        if (!e.data || e.data.size < 2048) return;
+        if (busyRef.current) return;
         busyRef.current = true;
         try {
           const resp = await voiceAPI.sttRespond(e.data, selectedServerVoice);
@@ -154,7 +147,6 @@ export const LiveVoice = () => {
             enqueueTTS(payload.audioBase64, payload.mime);
           }
 
-          // Detect degraded server path (quota or STT/chat failure):
           const fallbackPhrase = "Let me check with my supervisor and get back to you.";
           const isBeep = payload?.mime === 'audio/wav';
           const emptyTranscript = !payload?.transcript || payload.transcript.trim() === '';
@@ -168,25 +160,21 @@ export const LiveVoice = () => {
             serverFailCountRef.current = 0;
           }
 
-          // Auto-switch to browser STT/TTS after two degraded responses
           if (!useBrowserFallback && serverFailCountRef.current >= 2) {
             setNotice('Server speech is rate-limited. Switched to browser STT/TTS temporarily.');
             setUseBrowserFallback(true);
-            // restart loop with new mode
             setTimeout(() => {
               stopLoop();
               if (status === 'connected' && enableLoop) startLoop();
             }, 80);
           }
         } catch (err) {
-          // do not spam UI; log to console
           console.error('stt-respond failed', err);
         } finally {
-          // Small delay to avoid overlapping requests
           setTimeout(() => { busyRef.current = false; }, 200);
         }
       };
-      rec.start(1000); // send ~1s chunks for snappier responses
+      rec.start(1000);
       recorderRef.current = rec;
     } catch (e) {
       setError(e.message || 'Failed to start loop');
@@ -231,7 +219,7 @@ export const LiveVoice = () => {
       try { audioEl.preservesPitch = true; } catch {}
     }
     if (!audioEl.paused || audioEl.currentTime > 0 && !audioEl.ended) {
-      return; // playing
+      return;
     }
     const next = playQueueRef.current.shift();
     if (!next) return;
@@ -239,7 +227,6 @@ export const LiveVoice = () => {
     audioEl.src = url;
     audioEl.onended = () => {
       URL.revokeObjectURL(url);
-      // small gap to reduce clicks between utterances
       setTimeout(pumpPlayback, 120);
     };
     audioEl.onerror = () => {
@@ -249,7 +236,6 @@ export const LiveVoice = () => {
     audioEl.play().catch(() => pumpPlayback());
   };
 
-  // Mic level meter using Web Audio API
   const startMicMeter = (audioTrack) => {
     stopMicMeter();
     if (!audioTrack || !audioTrack.mediaStreamTrack) return;
@@ -264,7 +250,6 @@ export const LiveVoice = () => {
     const buf = new Uint8Array(analyser.frequencyBinCount);
     const loop = () => {
       analyser.getByteTimeDomainData(buf);
-      // RMS of time-domain samples
       let sum = 0;
       for (let i = 0; i < buf.length; i++) {
         const v = (buf[i] - 128) / 128;
@@ -291,7 +276,6 @@ export const LiveVoice = () => {
     setMicLevel(0);
   };
 
-  // --- Browser fallback: SpeechRecognition (STT) + speechSynthesis (TTS) ---
   const startBrowserSTTLoop = () => {
     try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -325,7 +309,6 @@ export const LiveVoice = () => {
         console.error('STT error', e);
       };
       recog.onend = () => {
-        // Auto-restart while loop enabled
         if (enableLoop && useBrowserFallback) {
           try { recog.start(); } catch {}
         }
@@ -373,7 +356,6 @@ export const LiveVoice = () => {
     } catch {}
   };
 
-  // Probe server recovery while on browser fallback
   const startProbeTimer = () => {
     stopProbeTimer();
     probeIntervalRef.current = setInterval(async () => {
@@ -400,7 +382,6 @@ export const LiveVoice = () => {
               if (!degraded) {
                 setNotice('Server speech recovered. Switched back to server STT/TTS.');
                 setUseBrowserFallback(false);
-                // restart loop in server mode
                 setTimeout(() => {
                   stopLoop();
                   if (status === 'connected' && enableLoop) startLoop();

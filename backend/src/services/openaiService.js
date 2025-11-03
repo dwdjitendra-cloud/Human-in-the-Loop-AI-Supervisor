@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Ensure fetch and FormData are available (Node < 18 support)
 async function ensureFetch() {
   if (typeof fetch === 'undefined') {
     const { default: fetchImpl } = await import('node-fetch');
@@ -18,7 +17,7 @@ async function ensureFetch() {
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_BASE = 'https://api.openai.com/v1';
 
-export const SYSTEM_PROMPT = "You are a real-time voice AI receptionist for a salon called 'Frontdesk Salon'. You speak to customers over the phone using natural, friendly, and short voice responses. Your goals: 1) Greet callers politely and assist them with services, timings, or appointments. 2) If you confidently know an answer, respond in a conversational, human tone (under 20 words). 3) If you are not sure or lack information, say exactly: 'Let me check with my supervisor and get back to you.' Do not guess. 4) Once your supervisor provides the correct answer, repeat it naturally and save it into your knowledge base. 5) Maintain context across calls and learn incrementally. 6) Never mention AI, APIs, or system internals. 7) Keep responses clear and suitable for TTS (no long paragraphs).";
+export const SYSTEM_PROMPT = "You are a real-time voice receptionist for 'Frontdesk Salon'. Keep responses friendly, short (under 20 words), and avoid guessing. If unsure, say: 'Let me check with my supervisor and get back to you.'";
 
 export async function transcribeAudio(buffer, filename = 'audio.webm') {
   await ensureFetch();

@@ -1,0 +1,18 @@
+{
+  "rewrites": [
+    { "source": "/help-requests", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/help-requests" },
+    { "source": "/help-requests/:path*", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/help-requests/:path*" },
+
+    { "source": "/knowledge-base", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/knowledge-base" },
+    { "source": "/knowledge-base/:path*", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/knowledge-base/:path*" },
+
+    { "source": "/supervisors", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/supervisors" },
+    { "source": "/supervisors/:path*", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/supervisors/:path*" },
+
+    { "source": "/voice/:path*", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/voice/:path*" },
+
+    { "source": "/livekit/:path*", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/livekit/:path*" },
+
+    { "source": "/simulate-call", "destination": "https://human-in-the-loop-ai-supervisor-0umh.onrender.com/api/simulate-call" }
+  ]
+}

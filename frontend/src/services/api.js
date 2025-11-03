@@ -1,8 +1,5 @@
 import axios from 'axios';
 
-// Prefer explicit VITE_API_BASE_URL; if missing and running on localhost, default to local backend.
-// In production, we do NOT fall back to a hard-coded URL. Set VITE_API_BASE_URL to your backend (e.g., Render) like:
-//   https://your-backend.onrender.com/api
 const envBase = import.meta?.env?.VITE_API_BASE_URL;
 const isBrowser = typeof window !== 'undefined';
 const isLocalhost = isBrowser && /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
@@ -19,8 +16,6 @@ if (import.meta?.env?.DEV) {
   console.debug('[API] baseURL =', API_BASE_URL);
 }
 
-// Note: don't set a global Content-Type. Axios will set the right header per request
-// (application/json for JSON bodies, multipart/form-data with boundary for FormData, etc.).
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -67,20 +62,17 @@ export const aiAgentAPI = {
 
 // Voice endpoints for TTS and voice replies
 export const voiceAPI = {
-  // Returns audio bytes (arraybuffer). Caller should create a Blob and play it.
+  // Returns audio bytes (arraybuffer)
   tts: (text) => api.get('/voice/tts', { params: { text }, responseType: 'arraybuffer' }),
-  // Returns { data: { ...result, audioBase64, mime } }
   reply: (data) => api.post('/voice/reply', data),
-  // LiveKit simulation voice path
   livekitSimulate: (data) => api.post('/livekit/simulate-call', data),
-  // Generate a LiveKit token
   token: ({ identity, roomName }) => api.post('/livekit/token', { identity, roomName }),
-  // Send audio blob and receive transcript + answer + audioBase64
+  // Send audio blob; receive transcript + answer + audioBase64
   sttRespond: (audioBlob, voice) => {
     const fd = new FormData();
     fd.append('audio', audioBlob, 'clip.webm');
     if (voice) fd.append('voice', voice);
-    // Important: DO NOT set Content-Type manually; the browser will add the correct multipart boundary
+    // Do not set Content-Type manually for FormData
     return api.post('/voice/stt-respond', fd, {
       headers: { 'Accept': 'application/json' },
     });

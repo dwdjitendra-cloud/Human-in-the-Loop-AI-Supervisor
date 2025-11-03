@@ -59,6 +59,16 @@ Required:
 Optional:
 - `VITE_LIVEKIT_URL` = your LiveKit URL (e.g., `wss://<your-livekit>.livekit.cloud`)
 
+Optional (no env needed): Rewrites
+- If you prefer not to set `VITE_API_BASE_URL`, you can add `frontend/vercel.json` with rewrites that proxy API calls to Render. This repo includes an example mapping like:
+  - `/help-requests/*` → `https://<render>.onrender.com/api/help-requests/*`
+  - `/knowledge-base/*` → `https://<render>.onrender.com/api/knowledge-base/*`
+  - `/supervisors/*` → `https://<render>.onrender.com/api/supervisors/*`
+  - `/voice/*` → `https://<render>.onrender.com/api/voice/*`
+  - `/livekit/*` → `https://<render>.onrender.com/api/livekit/*`
+  - `/simulate-call` → `https://<render>.onrender.com/api/simulate-call`
+  This lets relative calls work in production even if `VITE_API_BASE_URL` is missing.
+
 Notes:
 - The frontend now requires `VITE_API_BASE_URL` in production; we removed a brittle hard-coded fallback.
 - The browser voice fallback (Web Speech) requires HTTPS, which Vercel provides.
