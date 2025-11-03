@@ -23,13 +23,36 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // CORS: allow all by default; in production you can set CORS_ORIGIN to a comma-separated list
-// e.g., https://your-frontend.vercel.app,https://staging-your-frontend.vercel.app
+// Supports wildcard patterns like https://*.vercel.app
+// Example: CORS_ORIGIN="https://reception-ai-inky.vercel.app,https://*.vercel.app"
 const corsOrigins = (process.env.CORS_ORIGIN || '')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function originMatches(origin, pattern) {
+  if (pattern === '*') return true;
+  if (pattern.includes('*')) {
+    const regex = new RegExp('^' + pattern.split('*').map(escapeRegExp).join('.*') + '$');
+    return regex.test(origin);
+  }
+  return origin === pattern;
+}
+
 if (corsOrigins.length > 0) {
-  app.use(cors({ origin: corsOrigins, credentials: true }));
+  app.use(cors({
+    origin: (origin, callback) => {
+      // allow non-browser or same-origin requests
+      if (!origin) return callback(null, true);
+      const allowed = corsOrigins.some(p => originMatches(origin, p));
+      callback(null, allowed);
+    },
+    credentials: true,
+  }));
 } else {
   app.use(cors());
 }
