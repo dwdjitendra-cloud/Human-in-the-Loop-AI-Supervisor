@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { aiAgentAPI, helpRequestsAPI } from '../services/api';
+import React, { useRef, useState, useEffect } from 'react';
+import { aiAgentAPI, helpRequestsAPI, voiceAPI } from '../services/api';
 
 export const TestAI = ({ onNewRequest }) => {
   const [customerName, setCustomerName] = useState('');
@@ -8,6 +8,15 @@ export const TestAI = ({ onNewRequest }) => {
   const [result, setResult] = useState(null);
   const [callHistory, setCallHistory] = useState([]);
   const [useLivekitSim, setUseLivekitSim] = useState(true);
+  const [playVoice, setPlayVoice] = useState(false);
+  const [audioSrc, setAudioSrc] = useState(null);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioSrc) URL.revokeObjectURL(audioSrc);
+    };
+  }, [audioSrc]);
 
   const handleTestCall = async (e) => {
     e.preventDefault();
@@ -29,6 +38,32 @@ export const TestAI = ({ onNewRequest }) => {
       setResult(callData);
       setCallHistory([callData, ...callHistory]);
       onNewRequest?.();
+
+      // Optionally request voice reply and play it
+      if (playVoice) {
+        try {
+          const voiceResp = useLivekitSim
+            ? await voiceAPI.livekitSimulate({ customerName, question })
+            : await voiceAPI.reply({ customerName, question });
+
+          const payload = voiceResp?.data?.data || {};
+          if (payload.audioBase64 && payload.mime) {
+            const bytes = Uint8Array.from(atob(payload.audioBase64), (c) => c.charCodeAt(0));
+            const blob = new Blob([bytes], { type: payload.mime });
+            const url = URL.createObjectURL(blob);
+            setAudioSrc((prev) => {
+              if (prev) URL.revokeObjectURL(prev);
+              return url;
+            });
+            // Try autoplay
+            setTimeout(() => {
+              try { audioRef.current?.play?.(); } catch {}
+            }, 100);
+          }
+        } catch (err) {
+          console.error('Voice playback failed:', err);
+        }
+      }
 
       setCustomerName('');
       setQuestion('');
@@ -69,6 +104,16 @@ export const TestAI = ({ onNewRequest }) => {
               onChange={(e) => setUseLivekitSim(e.target.checked)}
             />
             Use LiveKit Simulation endpoint
+          </label>
+
+          <label className="flex items-center text-sm text-gray-700">
+            <input
+              type="checkbox"
+              className="mr-2"
+              checked={playVoice}
+              onChange={(e) => setPlayVoice(e.target.checked)}
+            />
+            Play voice reply (TTS)
           </label>
 
           <div>
@@ -123,6 +168,13 @@ export const TestAI = ({ onNewRequest }) => {
                 <p className="text-xs text-blue-700 mt-2 font-semibold">
                   Pending Help Request ID: {result.response.helpRequestId}
                 </p>
+              )}
+
+              {playVoice && audioSrc && (
+                <div className="mt-4">
+                  <p className="text-xs font-semibold text-gray-700">Voice Reply:</p>
+                  <audio ref={audioRef} src={audioSrc} controls autoPlay />
+                </div>
               )}
             </div>
           </div>

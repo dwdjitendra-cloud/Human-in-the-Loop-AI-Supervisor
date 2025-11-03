@@ -94,22 +94,32 @@ The Test Automated Agent page lets you:
 Backend (.env)
 ```
 PORT=5000
+NODE_ENV=development
 MONGO_URI=mongodb://localhost:27017/human-in-loop-ai
+# Allow server to start without DB in dev
+ALLOW_NO_DB=1
 JWT_SECRET=change-me
 
-# Optional
-TIMEOUT_MINUTES=5
-NOTIFY_WEBHOOK_URL=http://localhost:5000/api/webhook/notify
+# OpenAI (optional but recommended for real STT/Chat/TTS)
+OPENAI_API_KEY=
+# Optional voice label for TTS (e.g., alloy)
+TTS_VOICE=alloy
 
-# Optional LiveKit credentials if you integrate a real SDK later
+# LiveKit (optional for Live Voice)
 LIVEKIT_URL=
 LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
+
+# Optional notifications / timeouts
+TIMEOUT_MINUTES=5
+NOTIFY_WEBHOOK_URL=http://localhost:5000/api/webhook/notify
 ```
 
 Frontend (.env.local)
 ```
 VITE_API_BASE_URL=http://localhost:5000/api
+# LiveKit server URL (wss) if you use Live Voice
+VITE_LIVEKIT_URL=
 ```
 
 ## Local Setup
@@ -125,7 +135,22 @@ npm start
 cd frontend
 npm install
 echo VITE_API_BASE_URL=http://localhost:5000/api > .env.local
+# optionally add LiveKit URL
+Add-Content .env.local "`nVITE_LIVEKIT_URL=wss://YOUR_LIVEKIT_HOST"
 npm run dev
+```
+
+### Set secrets on Windows PowerShell
+```
+# Backend
+cd backend
+Copy-Item .env.example .env -Force
+# then edit .env to add your values (OPENAI_API_KEY, LIVEKIT_*, etc.)
+
+# Frontend
+cd ..\frontend
+Copy-Item .env.local.example .env.local -Force
+# then edit .env.local to set VITE_API_BASE_URL and optional VITE_LIVEKIT_URL
 ```
 
 ## Quick Tests (PowerShell)

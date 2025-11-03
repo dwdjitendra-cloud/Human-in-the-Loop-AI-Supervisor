@@ -5,6 +5,7 @@ import { PendingRequests } from './pages/PendingRequests';
 import { ResolvedRequests } from './pages/ResolvedRequests';
 import { KnowledgePage } from './pages/KnowledgeBase';
 import { TestAI } from './pages/TestAI';
+import { LiveVoice } from './pages/LiveVoice';
 
 export default function App() {
   // Define handleRequestResolved before usage
@@ -32,6 +33,16 @@ export default function App() {
     setSupervisorName('');
   };
 
+  // Restore auth state on refresh from localStorage
+  useEffect(() => {
+    const token = localStorage.getItem('supervisorToken');
+    const name = localStorage.getItem('supervisorName') || '';
+    if (token) {
+      setIsAuthenticated(true);
+      setSupervisorName(name);
+    }
+  }, []);
+
   if (!isAuthenticated) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
@@ -54,6 +65,8 @@ export default function App() {
         return <KnowledgePage initialFilter="learned" setErrorMessage={setErrorMessage} />;
       case 'test':
         return <TestAI setErrorMessage={setErrorMessage} />;
+      case 'voice':
+        return <LiveVoice />;
       default:
         return <PendingRequests key={refreshTrigger} onRequestResolved={handleRequestResolved} setErrorMessage={setErrorMessage} />;
     }

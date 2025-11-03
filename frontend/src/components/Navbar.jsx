@@ -63,6 +63,16 @@ export const Navbar = ({ currentPage, onNavigate, supervisorName, onLogout }) =>
             >
               Test AI
             </button>
+            <button
+              onClick={() => onNavigate('voice')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentPage === 'voice'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-300 hover:bg-slate-700'
+              }`}
+            >
+              Live Voice
+            </button>
           </div>
 
           <div className="flex items-center space-x-4">
