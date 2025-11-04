@@ -82,19 +82,103 @@ export const aiAgent = {
 
   async searchKnowledgeBase(question) {
     try {
-      const keywords = question.toLowerCase().split(' ').filter(word => word.length > 3);
+      const normalize = (s) => (s || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-      if (keywords.length === 0) return null;
+      const STOP = new Set([
+        'do','does','is','are','the','a','an','of','on','in','to','for','what','your','you','i','we','and','or','with','my','our','hi','hello','good','morning','evening','afternoon','at','how','when','where','please','can','could','would'
+      ]);
 
-      const regex = new RegExp(keywords.join('|'), 'i');
-      const match = await KnowledgeBase.findOne({
-        $or: [
-          { question: regex },
-          { answer: regex },
-        ],
-      });
+      const tokenize = (s) => normalize(s)
+        .split(' ')
+        .filter(Boolean);
 
-      return match;
+      const filterTokens = (tokens) => tokens.filter(t => t.length >= 2);
+      const isContentToken = (t) => !STOP.has(t) && t.length >= 3;
+
+      // Levenshtein distance (small) for fuzzy token match (handles jitu vs jeetu)
+      const lev = (a, b) => {
+        if (a === b) return 0;
+        const m = a.length, n = b.length;
+        if (m === 0) return n;
+        if (n === 0) return m;
+        const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+        for (let j = 0; j <= n; j++) dp[0][j] = j;
+        for (let i = 1; i <= m; i++) {
+          for (let j = 1; j <= n; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            dp[i][j] = Math.min(
+              dp[i - 1][j] + 1,
+              dp[i][j - 1] + 1,
+              dp[i - 1][j - 1] + cost,
+            );
+          }
+        }
+        return dp[m][n];
+      };
+
+      const fuzzyEq = (a, b) => {
+        if (a === b) return true;
+        const d = lev(a, b);
+        if (a.length <= 5 || b.length <= 5) return d <= 1;
+        return d <= 2;
+      };
+
+      const qTokensRaw = tokenize(question);
+      const qTokens = filterTokens(qTokensRaw);
+      if (!qTokens.length) return null;
+      const qContent = qTokens.filter(isContentToken);
+
+      // Load all KB entries and compute a Jaccard-like fuzzy similarity
+      const entries = await KnowledgeBase.find({});
+      let best = null;
+      let bestScore = 0;
+
+      for (const e of entries) {
+        const t = filterTokens(tokenize(e.question));
+        if (!t.length) continue;
+        const tContent = t.filter(isContentToken);
+
+        // Greedy fuzzy matching for intersection size
+        const used = new Array(t.length).fill(false);
+        let inter = 0;
+        for (const qt of qTokens) {
+          let matched = false;
+          for (let i = 0; i < t.length; i++) {
+            if (used[i]) continue;
+            if (qt === t[i] || fuzzyEq(qt, t[i])) { used[i] = true; matched = true; break; }
+          }
+          if (matched) inter++;
+        }
+        const union = new Set([...qTokens, ...t]).size || 1;
+        const jaccard = inter / union;
+
+        // Require content token agreement when at least two content tokens exist in query
+        let contentMatches = 0;
+        if (qContent.length >= 2) {
+          const usedC = new Array(tContent.length).fill(false);
+          for (const qc of qContent) {
+            for (let i = 0; i < tContent.length; i++) {
+              if (usedC[i]) continue;
+              if (qc === tContent[i] || fuzzyEq(qc, tContent[i])) { usedC[i] = true; contentMatches++; break; }
+            }
+          }
+        }
+
+        // Score emphasizes content matches and overall overlap
+        const score = jaccard + (contentMatches >= 2 ? 0.5 : contentMatches === 1 ? 0.2 : 0);
+
+        if (score > bestScore) { bestScore = score; best = e; }
+      }
+
+      // Accept only if score is sufficiently high to avoid cross-person bleed
+      if (best && bestScore >= 0.6) {
+        return best;
+      }
+      return null;
     } catch (error) {
       logger.error('Error searching knowledge base:', error.message);
       return null;

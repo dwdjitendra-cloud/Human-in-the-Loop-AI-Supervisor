@@ -35,6 +35,10 @@ export const LiveVoice = () => {
   const vadThresholdRef = useRef(10); // gate threshold on 0-100 scale
   const lastVoiceActivityRef = useRef(0); // last time level crossed threshold
   const warmupUntilRef = useRef(0); // grace period to ignore degradation at start
+  const lastHintAtRef = useRef(0); // throttle hint popup
+  const [hint, setHint] = useState('');
+  const [showTypeBox, setShowTypeBox] = useState(false);
+  const [typedQuestion, setTypedQuestion] = useState('');
 
   const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL;
 
@@ -175,6 +179,14 @@ export const LiveVoice = () => {
               serverFailCountRef.current += 1;
               // set cooldown for 45s on degradation (slightly shorter)
               cooldownUntilRef.current = Date.now() + 45_000;
+              // Show a gentle hint to the user to repeat or type (throttled)
+              if (emptyTranscript) {
+                const now2 = Date.now();
+                if (now2 - (lastHintAtRef.current || 0) > 15000) {
+                  lastHintAtRef.current = now2;
+                  showEphemeralHint("I didn't catch that — please repeat or type your question.");
+                }
+              }
             }
           } else {
             serverFailCountRef.current = 0;
@@ -298,6 +310,37 @@ export const LiveVoice = () => {
     }
     analyserRef.current = null;
     setMicLevel(0);
+  };
+
+  const showEphemeralHint = (message, ms = 4000) => {
+    try {
+      setHint(message);
+      setShowTypeBox(false);
+      setTimeout(() => { setHint(''); }, ms);
+    } catch {}
+  };
+
+  const sendTypedQuestion = async () => {
+    const q = (typedQuestion || '').trim();
+    if (!q) return;
+    try {
+      setLastTranscript(q);
+      const res = await voiceAPI.reply({ customerName: identity, question: q, voice: selectedServerVoice });
+      const payload = res?.data?.data || {};
+      const ans = payload?.response || payload?.answer || '';
+      if (ans) setLastAnswer(ans);
+      if (payload?.audioBase64 && payload?.mime) {
+        enqueueTTS(payload.audioBase64, payload.mime);
+      } else if (useBrowserFallback && ans) {
+        speakBrowserTTS(ans);
+      }
+    } catch (e) {
+      console.error('typed question failed', e);
+    } finally {
+      setTypedQuestion('');
+      setShowTypeBox(false);
+      setHint('');
+    }
   };
 
   const startBrowserSTTLoop = () => {
@@ -546,6 +589,30 @@ export const LiveVoice = () => {
           <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded flex items-center justify-between">
             <span>{notice}</span>
             <button onClick={() => setNotice('')} className="text-blue-700 hover:text-blue-900">×</button>
+          </div>
+        )}
+
+        {hint && (
+          <div className="p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded flex items-center justify-between">
+            <span className="text-sm">{hint}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowTypeBox(true)} className="px-2 py-1 text-xs rounded bg-yellow-600 text-white">Type it</button>
+              <button onClick={() => setHint('')} className="text-yellow-800 hover:text-yellow-900">×</button>
+            </div>
+          </div>
+        )}
+
+        {showTypeBox && (
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded flex items-center gap-2">
+            <input
+              className="flex-1 px-3 py-2 border rounded text-sm"
+              placeholder="Type your question..."
+              value={typedQuestion}
+              onChange={(e) => setTypedQuestion(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') sendTypedQuestion(); }}
+            />
+            <button onClick={sendTypedQuestion} className="px-3 py-2 rounded bg-blue-600 text-white text-sm">Send</button>
+            <button onClick={() => setShowTypeBox(false)} className="px-3 py-2 rounded bg-gray-200 text-gray-800 text-sm">Cancel</button>
           </div>
         )}
 
