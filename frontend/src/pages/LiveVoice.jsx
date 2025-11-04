@@ -36,6 +36,7 @@ export const LiveVoice = () => {
   const lastVoiceActivityRef = useRef(0); // last time level crossed threshold
   const warmupUntilRef = useRef(0); // grace period to ignore degradation at start
   const lastHintAtRef = useRef(0); // throttle hint popup
+  const recogRestartTimerRef = useRef(null); // restart timer for browser STT
   const [hint, setHint] = useState('');
   const [showTypeBox, setShowTypeBox] = useState(false);
   const [typedQuestion, setTypedQuestion] = useState('');
@@ -352,11 +353,15 @@ export const LiveVoice = () => {
       }
       const recog = new SpeechRecognition();
       recog.lang = 'en-US';
+      // Keep recognition alive longer and capture partials
       recog.continuous = true;
-      recog.interimResults = false;
+      recog.interimResults = true;
+      recog.maxAlternatives = 1;
       recog.onresult = async (evt) => {
         const last = evt.results[evt.results.length - 1];
-        if (!last || !last.isFinal) return;
+        if (!last) return;
+        // Use final result when available; otherwise ignore partials here
+        if (!last.isFinal) return;
         const text = last[0]?.transcript?.trim();
         if (!text) return;
         setLastTranscript(text);
@@ -372,14 +377,40 @@ export const LiveVoice = () => {
           console.error('browser STT loop failed', e);
         }
       };
+      const scheduleRestart = (delayMs = 400) => {
+        try { if (recogRestartTimerRef.current) clearTimeout(recogRestartTimerRef.current); } catch {}
+        recogRestartTimerRef.current = setTimeout(() => {
+          if (enableLoop && useBrowserFallback && recognitionRef.current === recog) {
+            try { recog.start(); } catch {}
+          }
+        }, delayMs);
+      };
       recog.onerror = (e) => {
-        console.error('STT error', e);
-      };
-      recog.onend = () => {
-        if (enableLoop && useBrowserFallback) {
-          try { recog.start(); } catch {}
+        const err = e?.error || '';
+        if (err === 'no-speech' || err === 'no-speech-error') {
+          // Ignore noisy no-speech errors; gently hint and restart
+          const now = Date.now();
+          if (now - (lastHintAtRef.current || 0) > 15000) {
+            lastHintAtRef.current = now;
+            showEphemeralHint("I didn't catch that — please repeat or type your question.");
+          }
+          scheduleRestart(500);
+          return;
         }
+        if (err === 'audio-capture' || err === 'not-allowed') {
+          setError('Microphone not available or permission denied. Please check your browser/site permissions.');
+        } else {
+          console.warn('Browser STT error', e);
+        }
+        scheduleRestart(800);
       };
+      // Some browsers fire onend often; restart if we're still in fallback loop
+      recog.onend = () => {
+        scheduleRestart(400);
+      };
+      // Treat nomatch/audioend similarly to keep session alive
+      recog.onnomatch = () => scheduleRestart(500);
+      recog.onaudioend = () => scheduleRestart(500);
       recognitionRef.current = recog;
       recog.start();
     } catch (e) {
@@ -393,9 +424,15 @@ export const LiveVoice = () => {
       if (recog) {
         try { recog.onresult = null; } catch {}
         try { recog.onend = null; } catch {}
+        try { recog.onnomatch = null; } catch {}
+        try { recog.onaudioend = null; } catch {}
         try { recog.stop(); } catch {}
       }
       recognitionRef.current = null;
+      if (recogRestartTimerRef.current) {
+        try { clearTimeout(recogRestartTimerRef.current); } catch {}
+        recogRestartTimerRef.current = null;
+      }
     } catch {}
   };
 
