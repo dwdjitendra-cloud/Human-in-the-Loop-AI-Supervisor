@@ -22,9 +22,6 @@ import jwt from 'jsonwebtoken';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS: allow all by default; in production you can set CORS_ORIGIN to a comma-separated list
-// Supports wildcard patterns like https://*.vercel.app
-// Example: CORS_ORIGIN="https://reception-ai-inky.vercel.app,https://*.vercel.app"
 const corsOrigins = (process.env.CORS_ORIGIN || '')
   .split(',')
   .map(s => s.trim())

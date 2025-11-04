@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
 
-export const KnowledgeBaseList = ({ knowledge, onDelete, onAddNew }) => {
+export const KnowledgeBaseList = ({ knowledge, onDelete, onAddNew, onUpdate }) => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ question: '', answer: '', category: 'General' });
+  const [editingId, setEditingId] = useState(null);
+  const [editAnswer, setEditAnswer] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onAddNew(formData);
     setFormData({ question: '', answer: '', category: 'General' });
     setShowForm(false);
+  };
+
+  const startEdit = (entry) => {
+    setEditingId(entry._id);
+    setEditAnswer(entry.answer || '');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditAnswer('');
+  };
+
+  const saveEdit = (id) => {
+    const data = { answer: editAnswer };
+    onUpdate?.(id, data);
+    setEditingId(null);
+    setEditAnswer('');
   };
 
   return (
@@ -82,7 +101,23 @@ export const KnowledgeBaseList = ({ knowledge, onDelete, onAddNew }) => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-800">{entry.question}</h3>
-                  <p className="text-gray-600 text-sm mt-2">{entry.answer}</p>
+                  {editingId === entry._id ? (
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Edit Answer</label>
+                      <textarea
+                        value={editAnswer}
+                        onChange={(e) => setEditAnswer(e.target.value)}
+                        rows="3"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                      />
+                      <div className="mt-2 flex gap-2">
+                        <button onClick={() => saveEdit(entry._id)} className="px-3 py-1 bg-green-600 text-white rounded text-sm">Save</button>
+                        <button onClick={cancelEdit} className="px-3 py-1 bg-gray-200 text-gray-800 rounded text-sm">Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm mt-2">{entry.answer}</p>
+                  )}
                   <div className="mt-3 flex gap-2 items-center text-xs">
                     <span
                       className={
@@ -96,12 +131,22 @@ export const KnowledgeBaseList = ({ knowledge, onDelete, onAddNew }) => {
                     <span className="text-gray-500">Used {entry.usageCount} times</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => onDelete(entry._id)}
-                  className="ml-2 text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
-                >
-                  Delete
-                </button>
+                <div className="flex flex-col items-end gap-2 ml-2">
+                  {editingId === entry._id ? null : (
+                    <button
+                      onClick={() => startEdit(entry)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onDelete(entry._id)}
+                    className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))

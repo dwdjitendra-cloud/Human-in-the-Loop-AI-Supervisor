@@ -50,6 +50,17 @@ export const KnowledgePage = ({ setErrorMessage, initialFilter = 'all' }) => {
     }
   };
 
+  const handleUpdate = async (id, updates) => {
+    try {
+      const response = await knowledgeBaseAPI.update(id, updates);
+      const updated = response.data.data;
+      setKnowledge((prev) => prev.map((k) => (k._id === id ? updated : k)));
+      setErrorMessage?.({ type: 'success', text: 'Entry updated.' });
+    } catch (err) {
+      setErrorMessage?.(err.response?.data?.message || 'Failed to update entry');
+    }
+  };
+
   const filtered = useMemo(() => {
     if (filter === 'learned') return knowledge.filter((k) => (k.category || '').toLowerCase() === 'learned');
     if (filter === 'general') return knowledge.filter((k) => (k.category || '').toLowerCase() === 'general');
@@ -95,7 +106,7 @@ export const KnowledgePage = ({ setErrorMessage, initialFilter = 'all' }) => {
         ) : error ? (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>
         ) : (
-          <KnowledgeBaseList knowledge={filtered} onDelete={handleDelete} onAddNew={handleAddNew} />
+          <KnowledgeBaseList knowledge={filtered} onDelete={handleDelete} onAddNew={handleAddNew} onUpdate={handleUpdate} />
         )}
       </div>
     </div>

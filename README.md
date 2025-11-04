@@ -226,6 +226,37 @@ Invoke-RestMethod 'http://localhost:5000/api/livekit/token?identity=tester&roomN
 - Browser fallback: LiveVoice page uses `SpeechRecognition` + `speechSynthesis` when server speech is unavailable/rate-limited.
 - LiveKit: Backend issues tokens via `/api/livekit/token`; client connects using `VITE_LIVEKIT_URL`.
 
+## OpenAI API behavior: when it works vs when it doesn’t
+
+This project uses OpenAI on the backend for both speech-to-text (STT) and text-to-speech (TTS). No OpenAI key is required in the browser.
+
+When OpenAI is working (healthy and key is valid)
+- STT: The frontend streams short opus chunks (webm/opus) to `/api/voice/stt-respond`. The server transcribes with OpenAI STT.
+- Agent: The server runs agent logic (KB → defaults → escalate) against the transcript and returns the selected answer.
+- TTS: The answer is synthesized server-side via OpenAI and returned as audio (MIME usually `audio/mpeg`). The UI plays it immediately.
+- Benefits: lower CPU on the client, consistent voice quality, and uniform behavior across browsers/devices.
+
+When OpenAI is not available (rate-limited, quota exhausted, invalid key, network issues)
+- Degradation detection on the client watches server responses:
+   - A "beep" tone with an empty transcript, or
+   - The safe fallback phrase: “Let me check with my supervisor and get back to you.”
+- After a short warm-up period (about 6 seconds), if 3 degradations occur, the app temporarily switches to browser STT/TTS:
+   - Browser STT: Web Speech API `SpeechRecognition` for transcription.
+   - Browser TTS: `speechSynthesis` for audio playback.
+   - A gentle, throttled hint appears: “I didn’t catch that — please repeat or type your question.”
+- The client runs a periodic probe in the background; when server STT/TTS recover, it automatically switches back to the server path.
+- Safety is preserved at all times: if the agent isn’t confident, it escalates to a supervisor rather than hallucinating.
+
+Common symptoms and what the app does
+- Rate limit/quota exceeded: temporary switch to browser STT/TTS; auto-recover later.
+- Wrong/OpenAI key missing: server responds with errors; browser fallback continues to work; text input path still works.
+- Unstable mic or quiet input: browser shows a brief hint and keeps recognition alive; typed fallback is always available.
+
+Environment requirements
+- Backend: set `OPENAI_API_KEY` and optionally `TTS_VOICE` (e.g., `verse`, `alloy`).
+- Frontend: none needed for OpenAI; the browser fallback uses built-in APIs.
+- If you deploy without an OpenAI key, the browser fallback path will still let you demo the agent using text/voice locally.
+
 ## Deployment (Render + Vercel)
 
 Backend (Render)

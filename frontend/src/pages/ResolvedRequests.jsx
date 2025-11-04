@@ -47,6 +47,17 @@ export const ResolvedRequests = () => {
 		}
 	};
 
+	const handleDelete = async (id) => {
+		if (!window.confirm('Delete this request permanently?')) return;
+		try {
+			await helpRequestsAPI.delete(id);
+			setRequests((prev) => prev.filter((r) => r._id !== id));
+			setTotalItems((prev) => Math.max(0, prev - 1));
+		} catch (err) {
+			setError('Failed to delete request');
+		}
+	};
+
 	const getStatusColor = (status) => {
 		switch (status) {
 			case 'Resolved':
@@ -103,7 +114,15 @@ export const ResolvedRequests = () => {
 												{request.question}
 											</div>
 										</div>
-										<span className={`px-3 py-1 rounded-lg text-xs font-semibold ${getStatusColor(request.status)}`}>{request.status}</span>
+										<div className="flex items-center gap-3">
+											<span className={`px-3 py-1 rounded-lg text-xs font-semibold ${getStatusColor(request.status)}`}>{request.status}</span>
+											<button
+												className="text-red-600 hover:text-red-800 text-xs font-semibold"
+												onClick={() => handleDelete(request._id)}
+											>
+												Delete
+											</button>
+										</div>
 									</div>
 									{request.answer && (
 										<div className="mt-2 text-gray-700">
