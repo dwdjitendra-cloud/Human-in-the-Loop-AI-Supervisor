@@ -7,6 +7,7 @@ dotenv.config();
 
 import { triggerEscalation, notifySupervisor } from './escalation.js';
 import { textToSpeech } from './textToSpeech.js';
+import { aiAgent } from './aiAgent.js';
 
 const LIVEKIT_URL = process.env.LIVEKIT_URL;
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY;
@@ -37,7 +38,16 @@ export async function receiveCall(customerName, question) {
   if (lowerQ.includes('service')) {
     return respond(customerName, `We offer: ${SALON_INFO.services.join(', ')}`);
   }
-  // If unknown, escalate
+  // Try full agent (KB + defaults + escalation) so simulation behaves like production
+  try {
+    const result = await aiAgent.processCall(customerName, question);
+    if (result && result.success && result.response) {
+      return respond(customerName, result.response);
+    }
+  } catch (e) {
+    console.error('[LiveKit] aiAgent failed in simulation:', e?.message || e);
+  }
+  // If agent cannot answer, escalate
   return escalate(customerName, question);
 }
 
@@ -45,10 +55,10 @@ export async function respond(customerName, answer) {
   console.log(`[LiveKit] Responding to ${customerName}: "${answer}"`);
 
   try {
-    const audioBuffer = await textToSpeech(answer);
+    const { buffer, mime } = await textToSpeech(answer);
     console.log(`[LiveKit] Audio generated for ${customerName}`);
     // Simulate LiveKit publish (in real app, send audio to LiveKit)
-    return { success: true, answer, audio: audioBuffer };
+    return { success: true, answer, audio: buffer, mime };
   } catch (error) {
     console.error(`[LiveKit] TTS failed for ${customerName}:`, error.message);
     return { success: false, error: 'TTS failed' };

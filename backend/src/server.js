@@ -246,7 +246,7 @@ app.post('/api/livekit/simulate-call', async (req, res) => {
     if (reply && reply.answer) {
       if (reply.audio) {
         audioBase64 = reply.audio.toString('base64');
-        mime = 'audio/mpeg'; // best-effort; livekitAgent may return different types
+        mime = reply.mime || 'audio/mpeg'; // prefer provided mime
       } else {
         const tts = await textToSpeech(reply.answer);
         audioBase64 = tts.buffer.toString('base64');
