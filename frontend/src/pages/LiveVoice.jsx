@@ -162,7 +162,6 @@ export const LiveVoice = () => {
           const resp = await voiceAPI.sttRespond(e.data, selectedServerVoice);
           const payload = resp?.data?.data || {};
           if (payload.transcript) setLastTranscript(payload.transcript);
-          // Only show agent answer if we actually captured a transcript (avoid auto-print on silence)
           if (payload.answer && payload.transcript && payload.transcript.trim() !== '') setLastAnswer(payload.answer);
           if (payload.audioBase64 && payload.mime) {
             enqueueTTS(payload.audioBase64, payload.mime);

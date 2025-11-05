@@ -38,7 +38,6 @@ export async function receiveCall(customerName, question) {
   if (lowerQ.includes('service')) {
     return respond(customerName, `We offer: ${SALON_INFO.services.join(', ')}`);
   }
-  // Try full agent (KB + defaults + escalation) so simulation behaves like production
   try {
     const result = await aiAgent.processCall(customerName, question);
     if (result && result.success && result.response) {
@@ -47,7 +46,6 @@ export async function receiveCall(customerName, question) {
   } catch (e) {
     console.error('[LiveKit] aiAgent failed in simulation:', e?.message || e);
   }
-  // If agent cannot answer, escalate
   return escalate(customerName, question);
 }
 

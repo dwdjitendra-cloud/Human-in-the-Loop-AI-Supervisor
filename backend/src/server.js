@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
@@ -53,6 +54,9 @@ if (corsOrigins.length > 0) {
 } else {
   app.use(cors());
 }
+// Performance & headers
+app.use(compression());
+app.disable('x-powered-by');
 app.use(express.json());
 
 connectDB();
@@ -162,7 +166,6 @@ app.post('/api/voice/reply', async (req, res) => {
     }
     const result = await aiAgent.processCall(customerName, question);
 
-    // If we have a response string, synthesize audio for it
     let audioBase64 = null;
     let mime = null;
     if (result && result.response) {
@@ -199,7 +202,6 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
       transcript = '';
     }
 
-    // Agent
     let agentUsed = false;
     if (transcript && transcript.trim().length > 0) {
       try {
@@ -213,7 +215,6 @@ app.post('/api/voice/stt-respond', upload.single('audio'), async (req, res) => {
       }
     }
 
-    // If agent could not provide an answer, return a safe fallback without chat generation
     if (!agentUsed) {
       answer = "Let me check with my supervisor and get back to you.";
     }
@@ -237,7 +238,6 @@ app.post('/api/livekit/simulate-call', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Customer name and question are required' });
     }
     const reply = await livekitAgent.receiveCall(customerName, question);
-    // If livekitAgent produced audio via its internal TTS, include it; otherwise synthesize here
     let audioBase64 = null;
     let mime = null;
     if (reply && reply.answer) {

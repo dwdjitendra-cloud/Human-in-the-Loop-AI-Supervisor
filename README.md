@@ -277,6 +277,16 @@ Frontend (Vercel)
 - Beep-only or frequent fallback: verify OpenAI key quota; the browser fallback continues to work without keys.
 - LiveKit token errors: set `LIVEKIT_API_KEY/SECRET` on the backend and `VITE_LIVEKIT_URL` on the frontend.
 
+## Future improvements
+
+- Streaming TTS playback: chunked audio streaming for lower start latency.
+- Partial-result handling: speak short confirmations while full answers load.
+- Supervisor tools: confidence heatmap for KB matches and quick edit/merge operations.
+- Observability: dashboard for fallback rates, KB hit ratios, and escalation causes.
+- RBAC and audit: per-route roles; audit logs for KB edits and escalations.
+- Offline-first browser STT: add wake-word and local VAD for ultra-low latency demos.
+- Background jobs: prune old help requests and rotate logs automatically.
+
 ## Security
 
 - Do not commit API keys. Prefer environment variables and per-environment secrets.
